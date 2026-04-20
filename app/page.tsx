@@ -1,8 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Logo from "@/public/images/logo-ttdg.jpg";
 
 export default function Home() {
   const router = useRouter();

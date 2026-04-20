@@ -9,6 +9,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { NavUser } from "./nav-user";
+import Link from "next/link";
 
 const AppSidebar = ({
   items,
@@ -20,33 +22,40 @@ const AppSidebar = ({
     icon: React.ReactNode;
   }[];
 }) => {
+  const user = {
+    name: "Trần Thị B",
+    email: "tranthib@example.com",
+    avatar: "/avatars/01.png",
+  };
+
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem className="flex gap-2 items-center">
-            {/* <Image src={Logo} alt="Logo" width={40} height={40} /> */}
-            {/* <span className="text-lg font-bold">
+          <SidebarMenuItem>
+            <p className="text-base font-semibold text-center">
               Hệ thống quản lý hồ sơ đấu giá
-            </span> */}
+            </p>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
+        <SidebarMenu className="gap-2">
           {items.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton asChild isActive={item.isActive}>
-                <a href={item.href}>
+                <Link href={item.href}>
                   {item.icon}
                   {item.label}
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        <NavUser user={user} />
+      </SidebarFooter>
     </Sidebar>
   );
 };

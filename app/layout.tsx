@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Phần mềm quản lý hồ sơ đấu giá",
   description: "Được quản lý bởi Trung tâm Dịch vụ Đấu giá Tài sản TP HCM ",
+  icons : {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
