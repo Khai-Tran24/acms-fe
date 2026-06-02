@@ -25,7 +25,7 @@ const AppSidebar = ({
   const user = {
     name: "Trần Thị B",
     email: "tranthib@example.com",
-    avatar: "/avatars/01.png",
+    avatar: "",
   };
 
   return (

@@ -17,7 +17,7 @@ export default function Home() {
           </p>
           <Button
             onClick={() => router.push("/sign-in")}
-            className="rounded px-4 py-2"
+            className="px-4 py-2"
           >
             Đăng nhập
           </Button>
