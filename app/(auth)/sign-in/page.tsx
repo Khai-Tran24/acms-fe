@@ -6,25 +6,36 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/context/auth-context";
+import { LoginRequest } from "@/lib/types/authentication.type";
 
 const schema = yup.object().shape({
-  username: yup.string().required("Username is required"),
-  password: yup.string().required("Password is required"),
+  loginIdentify: yup
+    .string()
+    .trim()
+    .required("Tên đăng nhập/Email là bắt buộc"),
+  password: yup.string().trim().required("Mật khẩu là bắt buộc"),
 });
 
 const SignInPage = () => {
-  const navigation = useRouter();
-  const {} = useForm({
+  const router = useRouter();
+  const { login, isLoading } = useAuth();
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<LoginRequest>({
     resolver: yupResolver(schema),
+    defaultValues: {
+      loginIdentify: "",
+      password: "",
+    },
   });
 
-  const onSubmit = (data: any) => {
-    // Handle form submission, e.g., call an API to authenticate the user
-    console.log(data);
-    // On successful authentication, navigate to the dashboard or home page
-    navigation.push("/dashboard");
+  const onSubmit = async (data: LoginRequest) => {
+    await login(data);
   };
 
   return (
@@ -35,32 +46,83 @@ const SignInPage = () => {
           Đăng nhập để sử dụng hệ thống quản lý hồ sơ đấu giá.
         </p>
       </div>
-      <FieldGroup>
-        <Field>
-          <FieldLabel>Email\Tên đăng nhập</FieldLabel>
-          <Input type="text" placeholder="Email hoặc tên đăng nhập" />
-        </Field>
-        <Field>
-          <FieldLabel>Mật khẩu</FieldLabel>
-          <Input type="password" placeholder="Mật khẩu" />
-          <div className="flex items-center justify-end text-sm text-muted-foreground w-full">
-            <p
-              className="hover:underline cursor-pointer"
-              onClick={() => navigation.push("/forgot-password")}
-            >
-              Quên mật khẩu?
-            </p>
-          </div>
-        </Field>
-        <Button className="w-full" variant={"default"}>
-          Đăng nhập
-        </Button>
-      </FieldGroup>
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FieldGroup>
+          <Controller
+            name="loginIdentify"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel htmlFor="loginIdentify">
+                  Tên đăng nhập/Email
+                </FieldLabel>
+                <Input
+                  type="text"
+                  placeholder="Nhập tên đăng nhập hoặc email"
+                  id="loginIdentify"
+                  autoComplete="off"
+                  disabled={isLoading}
+                  {...field}
+                />
+                {errors.loginIdentify && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.loginIdentify.message}
+                  </p>
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="password"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
+                <Input
+                  type="password"
+                  placeholder="Nhập mật khẩu"
+                  id="password"
+                  autoComplete="off"
+                  {...field}
+                  disabled={isLoading}
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
+                <div className="flex items-center justify-end text-sm text-muted-foreground w-full mt-1">
+                  <p
+                    className="hover:underline cursor-pointer"
+                    onClick={() =>
+                      !isLoading && router.push("/forgot-password")
+                    }
+                  >
+                    Quên mật khẩu?
+                  </p>
+                </div>
+              </Field>
+            )}
+          />
+
+          <Button
+            className="w-full"
+            variant={"default"}
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+          </Button>
+        </FieldGroup>
+      </form>
+
       <p className="text-sm text-muted-foreground text-center">
         Chưa có tài khoản?{" "}
         <span
           className="hover:underline cursor-pointer text-blue-600"
-          onClick={() => navigation.push("/sign-up")}
+          onClick={() => !isLoading && router.push("/sign-up")}
         >
           Đăng ký
         </span>
