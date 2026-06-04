@@ -6,13 +6,13 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import ProtectedRoute from "@/lib/common/protected-routes";
 import { LayoutDashboard, Sheet, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+
 
   const adminSidebarItems = [
     {

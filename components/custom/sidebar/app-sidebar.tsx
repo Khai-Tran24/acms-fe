@@ -22,12 +22,6 @@ const AppSidebar = ({
     icon: React.ReactNode;
   }[];
 }) => {
-  const user = {
-    name: "Trần Thị B",
-    email: "tranthib@example.com",
-    avatar: "",
-  };
-
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
@@ -54,7 +48,7 @@ const AppSidebar = ({
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

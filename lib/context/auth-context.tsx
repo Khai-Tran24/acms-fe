@@ -16,7 +16,7 @@ import {
 } from "../api/authentication/authentication.api";
 import { UserData } from "../types/user.type";
 import { signIn } from "../api/authentication/authentication.api";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useToast } from "../hooks/use-toast";
 import { LoginRequest, RegisterRequest } from "../types/authentication.type";
 
@@ -58,30 +58,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const router = useRouter();
-  const path = usePathname();
 
   useEffect(() => {
-    const token = getAccessToken();
-    setIsLoading(true);
-    if (token) {
+    const loadUserData = async () => {
+      setIsLoading(true);
       try {
-        const decoded = decodeJwt(token);
-        setIsAuthenticated(true);
-        setUser(decoded);
-        setUserRole((decoded?.role as RoleEnum) || null);
+        const token = getAccessToken();
+        if (token) {
+          const decoded = decodeJwt(token);
+          setIsAuthenticated(true);
+          setUser(decoded);
+          setUserRole((decoded?.role as RoleEnum) || null);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+          setUserRole(null);
+        }
       } catch (error) {
         console.error("Error decoding token:", error);
         setIsAuthenticated(false);
         setUser(null);
         setUserRole(null);
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      setIsAuthenticated(false);
-      setUser(null);
-      setUserRole(null);
-    }
-    setIsLoading(false);
-  }, [path]);
+    };
+    loadUserData();
+  }, []);
 
   const login = async (loginData: LoginRequest) => {
     setIsLoading(true);
@@ -93,6 +96,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem("accessToken", token);
         const decoded = decodeJwt(token);
 
+        setIsAuthenticated(true);
+        setUser(decoded);
+        setUserRole((decoded?.role as RoleEnum) || null);
+        localStorage.setItem("user", JSON.stringify(decoded));
+
         success("Đăng nhập thành công!");
 
         setTimeout(() => {
@@ -102,7 +110,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             router.push("/contracts");
           }
           setIsLoading(false);
-          localStorage.setItem("user", JSON.stringify(decoded));
         }, 1000);
       } else {
         throw new Error(response.message || "Login failed");
