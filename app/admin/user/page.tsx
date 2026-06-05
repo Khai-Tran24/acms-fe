@@ -121,6 +121,7 @@ const UserPage = () => {
                         variant="ghost"
                         size="icon"
                         className="mr-2 text-green-500 hover:text-green-700 hover:bg-green-100"
+                        disabled={!user.isActive}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -141,6 +142,7 @@ const UserPage = () => {
                         variant="ghost"
                         size="icon"
                         className="mr-2 text-red-500 hover:text-red-700 hover:bg-red-100"
+                        disabled={!user.isActive}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
