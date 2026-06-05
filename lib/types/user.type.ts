@@ -13,3 +13,13 @@ export interface UserDetails extends UserData {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface GetUserResponse {
+  search?: string;
+  filterByRole?: RoleEnum;
+  filterByStatus?: boolean;
+  sortBy?: "username" | "email" | "createdAt";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}

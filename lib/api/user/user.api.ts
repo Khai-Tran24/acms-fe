@@ -24,7 +24,7 @@ const getUserDetails = async (userId: string) => {
 
 const createUser = async (userData: Partial<UserData>) => {
   try {
-    const response = await api.post("/user", userData);
+    const response = await api.post("/users", userData);
     return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -32,9 +32,9 @@ const createUser = async (userData: Partial<UserData>) => {
   }
 };
 
-const updateUser = async (userData: Partial<UserData>) => {
+const updateUser = async (userId: string, userData: Partial<UserData>) => {
   try {
-    const response = await api.put("/user", userData);
+    const response = await api.patch(`/users/${userId}`, userData);
     return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -42,9 +42,9 @@ const updateUser = async (userData: Partial<UserData>) => {
   }
 };
 
-const deleteUser = async () => {
+const deleteUser = async (userId: string) => {
   try {
-    const response = await api.delete("/user");
+    const response = await api.delete(`/users/${userId}`);
     return response.data as Response<null>;
   } catch (error) {
     console.error("Error deleting user:", error);

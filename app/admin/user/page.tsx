@@ -34,6 +34,8 @@ import { DeleteUserModal } from "./_components/delete-user-modal";
 
 const UserPage = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
+  const [closeUpdateModal, setCloseUpdateModal] = useState(false);
+  const [closeDeleteModal, setCloseDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -105,7 +107,7 @@ const UserPage = () => {
                         <Eye className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-lg">
                       <DialogHeader>
                         <DialogTitle>Chi tiết người dùng</DialogTitle>
                         <DialogDescription>
@@ -115,13 +117,16 @@ const UserPage = () => {
                       <ViewDetailModal user={user} />
                     </DialogContent>
                   </Dialog>
-                  <Dialog>
+                  <Dialog
+                  // open={closeUpdateModal}
+                  // onOpenChange={setCloseUpdateModal}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="mr-2 text-green-500 hover:text-green-700 hover:bg-green-100"
-                        disabled={!user.isActive}
+                        disabled={true}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -133,16 +138,21 @@ const UserPage = () => {
                           Cập nhật thông tin người dùng.
                         </DialogDescription>
                       </DialogHeader>
-                      <UpdateUserModal user={user} />
+                      <UpdateUserModal
+                        user={user}
+                        setOpen={setCloseUpdateModal}
+                      />
                     </DialogContent>
                   </Dialog>
-                  <Dialog>
-                    <DialogTrigger asChild>
+                  <Dialog
+                  // open={closeDeleteModal}
+                  // onOpenChange={setCloseDeleteModal}
+                  >
+                    <DialogTrigger asChild disabled={user.isActive === true}>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="mr-2 text-red-500 hover:text-red-700 hover:bg-red-100"
-                        disabled={!user.isActive}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -154,7 +164,10 @@ const UserPage = () => {
                           Bạn có chắc chắn muốn xóa người dùng này không?
                         </DialogDescription>
                       </DialogHeader>
-                      <DeleteUserModal />
+                      <DeleteUserModal
+                        userId={user.id}
+                        setOpen={setCloseDeleteModal}
+                      />
                     </DialogContent>
                   </Dialog>
                 </TableCell>
