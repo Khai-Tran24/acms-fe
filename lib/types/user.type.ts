@@ -8,3 +8,8 @@ export interface UserData {
   isActive: boolean;
   avatar?: string;
 }
+
+export interface UserDetails extends UserData {
+  createdAt: string;
+  updatedAt: string;
+}
