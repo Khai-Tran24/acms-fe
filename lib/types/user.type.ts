@@ -14,12 +14,10 @@ export interface UserDetails extends UserData {
   updatedAt: string;
 }
 
-export interface GetUserResponse {
+export interface GetUsersQuery {
   search?: string;
   filterByRole?: RoleEnum;
   filterByStatus?: boolean;
   sortBy?: "username" | "email" | "createdAt";
   sortOrder?: "asc" | "desc";
-  page?: number;
-  limit?: number;
 }

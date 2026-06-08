@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUserDetails } from "@/lib/api/user/user.api";
+import { RoleEnum } from "@/lib/enums/role.enum";
 import { UserData, UserDetails } from "@/lib/types/user.type";
 import { useEffect, useState } from "react";
 
@@ -48,15 +49,17 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
         <>
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Tên người dùng</p>
-              <p className="text-base font-semibold text-gray-900">
-                {userDetails.username}
-              </p>
-            </div>
-            <div>
               <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
               <p className="text-base font-semibold text-gray-900">
                 {userDetails.email}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">
+                Tên người dùng
+              </p>
+              <p className="text-base font-semibold text-gray-900">
+                {userDetails.username}
               </p>
             </div>
           </div>
@@ -64,12 +67,20 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="text-sm font-medium text-gray-500 mb-2">Vai trò</p>
-              <Badge className="bg-blue-100 text-blue-800 capitalize">
-                {userDetails.role}
+              <Badge className="bg-gray-300 text-black">
+                {userDetails.role === RoleEnum.AUCTIONEER
+                  ? "Đấu giá viên"
+                  : userDetails.role === RoleEnum.SECRETARY
+                    ? "Thư ký"
+                    : userDetails.role === RoleEnum.ADMIN
+                      ? "Quản trị viên"
+                      : userDetails.role}
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-2">Trạng thái</p>
+              <p className="text-sm font-medium text-gray-500 mb-2">
+                Trạng thái
+              </p>
               <Badge
                 className={`${
                   userDetails.isActive
@@ -102,7 +113,9 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
           </div>
         </>
       ) : (
-        <p className="text-center text-gray-500">Không thể tải thông tin người dùng</p>
+        <p className="text-center text-gray-500">
+          Không thể tải thông tin người dùng
+        </p>
       )}
     </div>
   );

@@ -1,6 +1,8 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -8,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { getUserDetails, updateUser } from "@/lib/api/user/user.api";
 import { RoleEnum } from "@/lib/enums/role.enum";
 import { useToast } from "@/lib/hooks/use-toast";
@@ -33,6 +36,7 @@ const updateUserSchema = yup.object().shape({
     .string()
     .oneOf(Object.values(RoleEnum))
     .required("Vai trò là bắt buộc"),
+  isActive: yup.boolean().required("Trạng thái hoạt động là bắt buộc"),
 });
 
 export const UpdateUserModal = ({
@@ -56,6 +60,7 @@ export const UpdateUserModal = ({
       username: user.username,
       email: user.email,
       role: user.role,
+      isActive: user.isActive,
     },
   });
 
@@ -167,14 +172,19 @@ export const UpdateUserModal = ({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(RoleEnum).map((role) => {
-                    if (role === RoleEnum.ADMIN) return null;
                     return (
-                      <SelectItem key={role} value={role}>
+                      <SelectItem
+                        key={role}
+                        value={role}
+                        disabled={role === RoleEnum.ADMIN}
+                      >
                         {role === RoleEnum.AUCTIONEER
                           ? "Đấu giá viên"
                           : role === RoleEnum.SECRETARY
                             ? "Thư ký"
-                            : role}
+                            : role === RoleEnum.ADMIN
+                              ? "Quản trị viên"
+                              : role}
                       </SelectItem>
                     );
                   })}
@@ -183,6 +193,34 @@ export const UpdateUserModal = ({
               {errors.role && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.role.message}
+                </p>
+              )}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="isActive"
+          control={control}
+          render={({ field }) => (
+            <Field>
+              <FieldLabel className="text-sm font-medium text-gray-700">
+                Trạng thái hoạt động
+              </FieldLabel>
+              <div className="mt-1 flex items-center gap-2">
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked)}
+                />
+                <Badge
+                  className={`text-sm ${field.value ? "text-green-800 bg-green-200" : "text-red-800 bg-red-200"}`}
+                >
+                  {field.value ? "Đang hoạt động" : "Không hoạt động"}
+                </Badge>
+              </div>
+              {errors.isActive && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.isActive.message}
                 </p>
               )}
             </Field>
@@ -198,7 +236,7 @@ export const UpdateUserModal = ({
         >
           {isLoading ? "Đang cập nhật..." : "Cập nhật"}
         </Button>
-        <Button
+        {/* <Button
           type="button"
           variant="outline"
           className="flex-1 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-50 transition-colors"
@@ -207,7 +245,7 @@ export const UpdateUserModal = ({
           }}
         >
           Hủy
-        </Button>
+        </Button> */}
       </div>
     </form>
   );

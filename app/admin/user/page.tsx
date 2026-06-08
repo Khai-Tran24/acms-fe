@@ -17,6 +17,14 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -25,45 +33,202 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getAllUsers } from "@/lib/api/user/user.api";
-import { UserData } from "@/lib/types/user.type";
-import { Edit, Eye, Search, Trash2 } from "lucide-react";
+import { RoleEnum } from "@/lib/enums/role.enum";
+import { PaginationInfo } from "@/lib/types/reponse.type";
+import { GetUsersQuery, UserData } from "@/lib/types/user.type";
+import { Edit, Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ViewDetailModal } from "./_components/view-detail-modal";
 import { UpdateUserModal } from "./_components/update-user-modal";
 import { DeleteUserModal } from "./_components/delete-user-modal";
 
+const DEFAULT_PAGINATION: PaginationInfo = {
+  page: 1,
+  limit: 10,
+  totalPages: 1,
+  totalItems: 0,
+};
+
+const SEARCH_DEBOUNCE_MS = 500;
+
 const UserPage = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
-  const [closeUpdateModal, setCloseUpdateModal] = useState(false);
-  const [closeDeleteModal, setCloseDeleteModal] = useState(false);
+  const [pagination, setPagination] =
+    useState<PaginationInfo>(DEFAULT_PAGINATION);
+  const [page, setPage] = useState(DEFAULT_PAGINATION.page);
+  const [limit, setLimit] = useState(DEFAULT_PAGINATION.limit);
+  const [search, setSearch] = useState("");
+  const [filterByRole, setFilterByRole] =
+    useState<GetUsersQuery["filterByRole"]>();
+  const [filterByStatus, setFilterByStatus] =
+    useState<GetUsersQuery["filterByStatus"]>();
+  const [sortBy, setSortBy] = useState<GetUsersQuery["sortBy"]>();
+  const [sortOrder, setSortOrder] = useState<GetUsersQuery["sortOrder"]>();
+  const [, setCloseUpdateModal] = useState(false);
+  const [, setCloseDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await getAllUsers();
-        console.log("API response:", response);
+        const response = await getAllUsers({
+          page,
+          limit,
+          search: search || undefined,
+          filterByRole,
+          filterByStatus,
+          sortBy,
+          sortOrder,
+        });
         setUserData(response.data);
+        setPagination(response.pagination);
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [page, limit, search, filterByRole, filterByStatus, sortBy, sortOrder]);
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
+
+  const handleRoleChange = (value: string) => {
+    setFilterByRole(value === "all" ? undefined : (value as RoleEnum));
+    setPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setFilterByStatus(value === "all" ? undefined : value === "active");
+    setPage(1);
+  };
+
+  const handleSortByChange = (value: string) => {
+    setSortBy(
+      value === "none" ? undefined : (value as GetUsersQuery["sortBy"]),
+    );
+    setPage(1);
+  };
+
+  const handleSortOrderChange = (value: string) => {
+    setSortOrder(
+      value === "none" ? undefined : (value as GetUsersQuery["sortOrder"]),
+    );
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setFilterByRole(undefined);
+    setFilterByStatus(undefined);
+    setSortBy(undefined);
+    setSortOrder(undefined);
+    setPage(1);
+  };
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Quản lý người dùng</h1>
 
       <main className="rounded-lg bg-white p-4 ring-1 ring-foreground/10 mb-4">
-        <div>
-          <InputGroup className="mb-2 w-full">
-            <InputGroupInput placeholder="Tìm kiếm người dùng..." />
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+          <InputGroup className="w-full lg:min-w-72 lg:flex-1">
+            <InputGroupInput
+              value={search}
+              placeholder="Tìm kiếm người dùng..."
+              onChange={(event) => setSearch(event.target.value)}
+            />
             <InputGroupAddon>
               <Search className="text-gray-500" />
             </InputGroupAddon>
-            <InputGroupAddon align="inline-end">12 results</InputGroupAddon>
+            <InputGroupAddon align="inline-end">
+              {pagination.totalItems} results
+            </InputGroupAddon>
           </InputGroup>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:items-center">
+            <Select
+              value={filterByRole ?? "all"}
+              onValueChange={handleRoleChange}
+            >
+              <SelectTrigger className="w-full lg:w-36">
+                <SelectValue placeholder="Vai trò" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">Tất cả vai trò</SelectItem>
+                  {Object.values(RoleEnum).map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={
+                filterByStatus === undefined
+                  ? "all"
+                  : filterByStatus
+                    ? "active"
+                    : "inactive"
+              }
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                  <SelectItem value="active">Đang hoạt động</SelectItem>
+                  <SelectItem value="inactive">Không hoạt động</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy ?? "none"} onValueChange={handleSortByChange}>
+              <SelectTrigger className="w-full lg:w-36">
+                <SelectValue placeholder="Sắp xếp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="none">Không sắp xếp</SelectItem>
+                  <SelectItem value="username">Tên người dùng</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="createdAt">Ngày tạo</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={sortOrder ?? "none"}
+              onValueChange={handleSortOrderChange}
+            >
+              <SelectTrigger className="w-full lg:w-32">
+                <SelectValue placeholder="Thứ tự" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="none">Mặc định</SelectItem>
+                  <SelectItem value="asc">Tăng dần</SelectItem>
+                  <SelectItem value="desc">Giảm dần</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetFilters}
+              className="col-span-2 sm:col-span-4 lg:col-span-1"
+            >
+              <RotateCcw />
+              Reset
+            </Button>
+          </div>
         </div>
         <Table>
           <TableHeader>
@@ -83,7 +248,15 @@ const UserPage = () => {
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Badge className="bg-gray-300 text-black">{user.role}</Badge>
+                  <Badge className="bg-gray-300 text-black">
+                    {user.role === RoleEnum.AUCTIONEER
+                      ? "Đấu giá viên"
+                      : user.role === RoleEnum.SECRETARY
+                        ? "Thư ký"
+                        : user.role === RoleEnum.ADMIN
+                          ? "Quản trị viên"
+                          : user.role}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   {user.isActive ? (
@@ -117,16 +290,12 @@ const UserPage = () => {
                       <ViewDetailModal user={user} />
                     </DialogContent>
                   </Dialog>
-                  <Dialog
-                  // open={closeUpdateModal}
-                  // onOpenChange={setCloseUpdateModal}
-                  >
+                  <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="mr-2 text-green-500 hover:text-green-700 hover:bg-green-100"
-                        disabled={true}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -144,10 +313,7 @@ const UserPage = () => {
                       />
                     </DialogContent>
                   </Dialog>
-                  <Dialog
-                  // open={closeDeleteModal}
-                  // onOpenChange={setCloseDeleteModal}
-                  >
+                  <Dialog>
                     <DialogTrigger asChild disabled={user.isActive === true}>
                       <Button
                         variant="ghost"
@@ -176,7 +342,14 @@ const UserPage = () => {
           </TableBody>
         </Table>
       </main>
-      <CustomPagination />
+      <CustomPagination
+        currentPage={pagination.page}
+        pageSize={pagination.limit}
+        totalItems={pagination.totalItems}
+        totalPages={pagination.totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 };
