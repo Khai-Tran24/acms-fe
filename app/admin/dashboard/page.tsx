@@ -1,6 +1,6 @@
-import CustomBarChart from "@/components/dashboard/chart/custom-bar-chart";
-import CustomPieChart from "@/components/dashboard/chart/custom-pie-chart";
-import CardSection from "@/components/dashboard/section/card-section";
+import CustomBarChart from "@/app/admin/dashboard/_components/chart/custom-bar-chart";
+import CustomPieChart from "@/app/admin/dashboard/_components/chart/custom-pie-chart";
+import CardSection from "@/app/admin/dashboard/_components/section/card-section";
 import { ScrollText } from "lucide-react";
 
 const DashboardPage = () => {

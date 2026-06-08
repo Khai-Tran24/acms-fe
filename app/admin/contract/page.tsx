@@ -1,3 +1,5 @@
+"use client";
+
 import CustomPagination from "@/components/custom/custom-pagination";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,9 +16,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Download, Edit, Eye, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 const ContractPage = () => {
-  const userData = [
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const contractData = [
     {
       id: 1,
       name: "Hợp đồng A",
@@ -39,6 +44,17 @@ const ContractPage = () => {
       isActive: true,
     },
   ];
+  const totalItems = contractData.length;
+  const totalPages = Math.max(Math.ceil(totalItems / limit), 1);
+  const paginatedContractData = contractData.slice(
+    (page - 1) * limit,
+    page * limit
+  );
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
 
   return (
     <div className="p-4">
@@ -51,7 +67,9 @@ const ContractPage = () => {
             <InputGroupAddon>
               <Search className="text-gray-500" />
             </InputGroupAddon>
-            <InputGroupAddon align="inline-end">12 results</InputGroupAddon>
+            <InputGroupAddon align="inline-end">
+              {totalItems} results
+            </InputGroupAddon>
           </InputGroup>
         </div>
         <Table>
@@ -66,7 +84,7 @@ const ContractPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {userData.map((user) => (
+            {paginatedContractData.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
                 <TableCell>{user.name}</TableCell>
@@ -114,7 +132,14 @@ const ContractPage = () => {
           </TableBody>
         </Table>
       </main>
-      <CustomPagination />
+      <CustomPagination
+        currentPage={page}
+        pageSize={limit}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 };

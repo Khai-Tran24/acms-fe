@@ -8,3 +8,16 @@ export interface UserData {
   isActive: boolean;
   avatar?: string;
 }
+
+export interface UserDetails extends UserData {
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetUsersQuery {
+  search?: string;
+  filterByRole?: RoleEnum;
+  filterByStatus?: boolean;
+  sortBy?: "username" | "email" | "createdAt";
+  sortOrder?: "asc" | "desc";
+}

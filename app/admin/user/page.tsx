@@ -1,6 +1,16 @@
+"use client";
+
 import CustomPagination from "@/components/custom/custom-pagination";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   InputGroup,
   InputGroupAddon,
@@ -22,46 +32,203 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, Eye, Search, Trash2 } from "lucide-react";
+import { getAllUsers } from "@/lib/api/user/user.api";
+import { RoleEnum } from "@/lib/enums/role.enum";
+import { PaginationInfo } from "@/lib/types/reponse.type";
+import { GetUsersQuery, UserData } from "@/lib/types/user.type";
+import { Edit, Eye, RotateCcw, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ViewDetailModal } from "./_components/view-detail-modal";
+import { UpdateUserModal } from "./_components/update-user-modal";
+import { DeleteUserModal } from "./_components/delete-user-modal";
+
+const DEFAULT_PAGINATION: PaginationInfo = {
+  page: 1,
+  limit: 10,
+  totalPages: 1,
+  totalItems: 0,
+};
+
+const SEARCH_DEBOUNCE_MS = 500;
 
 const UserPage = () => {
-  const userData = [
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      email: "nguyenvana@example.com",
-      role: "Admin",
-      isActive: true,
-    },
-    {
-      id: 2,
-      name: "Trần Thị B",
-      email: "tranthib@example.com",
-      role: "User",
-      isActive: false,
-    },
-    {
-      id: 3,
-      name: "Lê Văn C",
-      email: "levanc@example.com",
-      role: "User",
-      isActive: true,
-    },
-  ];
+  const [userData, setUserData] = useState<UserData[]>([]);
+  const [pagination, setPagination] =
+    useState<PaginationInfo>(DEFAULT_PAGINATION);
+  const [page, setPage] = useState(DEFAULT_PAGINATION.page);
+  const [limit, setLimit] = useState(DEFAULT_PAGINATION.limit);
+  const [search, setSearch] = useState("");
+  const [filterByRole, setFilterByRole] =
+    useState<GetUsersQuery["filterByRole"]>();
+  const [filterByStatus, setFilterByStatus] =
+    useState<GetUsersQuery["filterByStatus"]>();
+  const [sortBy, setSortBy] = useState<GetUsersQuery["sortBy"]>();
+  const [sortOrder, setSortOrder] = useState<GetUsersQuery["sortOrder"]>();
+  const [, setCloseUpdateModal] = useState(false);
+  const [, setCloseDeleteModal] = useState(false);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await getAllUsers({
+          page,
+          limit,
+          search: search || undefined,
+          filterByRole,
+          filterByStatus,
+          sortBy,
+          sortOrder,
+        });
+        setUserData(response.data);
+        setPagination(response.pagination);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [page, limit, search, filterByRole, filterByStatus, sortBy, sortOrder]);
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
+
+  const handleRoleChange = (value: string) => {
+    setFilterByRole(value === "all" ? undefined : (value as RoleEnum));
+    setPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setFilterByStatus(value === "all" ? undefined : value === "active");
+    setPage(1);
+  };
+
+  const handleSortByChange = (value: string) => {
+    setSortBy(
+      value === "none" ? undefined : (value as GetUsersQuery["sortBy"]),
+    );
+    setPage(1);
+  };
+
+  const handleSortOrderChange = (value: string) => {
+    setSortOrder(
+      value === "none" ? undefined : (value as GetUsersQuery["sortOrder"]),
+    );
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setFilterByRole(undefined);
+    setFilterByStatus(undefined);
+    setSortBy(undefined);
+    setSortOrder(undefined);
+    setPage(1);
+  };
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Quản lý người dùng</h1>
 
       <main className="rounded-lg bg-white p-4 ring-1 ring-foreground/10 mb-4">
-        <div>
-          <InputGroup className="mb-2 w-full">
-            <InputGroupInput placeholder="Tìm kiếm người dùng..." />
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+          <InputGroup className="w-full lg:min-w-72 lg:flex-1">
+            <InputGroupInput
+              value={search}
+              placeholder="Tìm kiếm người dùng..."
+              onChange={(event) => setSearch(event.target.value)}
+            />
             <InputGroupAddon>
               <Search className="text-gray-500" />
             </InputGroupAddon>
-            <InputGroupAddon align="inline-end">12 results</InputGroupAddon>
+            <InputGroupAddon align="inline-end">
+              {pagination.totalItems} results
+            </InputGroupAddon>
           </InputGroup>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:items-center">
+            <Select
+              value={filterByRole ?? "all"}
+              onValueChange={handleRoleChange}
+            >
+              <SelectTrigger className="w-full lg:w-36">
+                <SelectValue placeholder="Vai trò" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">Tất cả vai trò</SelectItem>
+                  {Object.values(RoleEnum).map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={
+                filterByStatus === undefined
+                  ? "all"
+                  : filterByStatus
+                    ? "active"
+                    : "inactive"
+              }
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                  <SelectItem value="active">Đang hoạt động</SelectItem>
+                  <SelectItem value="inactive">Không hoạt động</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy ?? "none"} onValueChange={handleSortByChange}>
+              <SelectTrigger className="w-full lg:w-36">
+                <SelectValue placeholder="Sắp xếp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="none">Không sắp xếp</SelectItem>
+                  <SelectItem value="username">Tên người dùng</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="createdAt">Ngày tạo</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={sortOrder ?? "none"}
+              onValueChange={handleSortOrderChange}
+            >
+              <SelectTrigger className="w-full lg:w-32">
+                <SelectValue placeholder="Thứ tự" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="none">Mặc định</SelectItem>
+                  <SelectItem value="asc">Tăng dần</SelectItem>
+                  <SelectItem value="desc">Giảm dần</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetFilters}
+              className="col-span-2 sm:col-span-4 lg:col-span-1"
+            >
+              <RotateCcw />
+              Reset
+            </Button>
+          </div>
         </div>
         <Table>
           <TableHeader>
@@ -77,34 +244,112 @@ const UserPage = () => {
           <TableBody>
             {userData.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.id.slice(0, 8)}...</TableCell>
+                <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Badge className="bg-gray-300 text-black">
+                    {user.role === RoleEnum.AUCTIONEER
+                      ? "Đấu giá viên"
+                      : user.role === RoleEnum.SECRETARY
+                        ? "Thư ký"
+                        : user.role === RoleEnum.ADMIN
+                          ? "Quản trị viên"
+                          : user.role}
+                  </Badge>
+                </TableCell>
                 <TableCell>
                   {user.isActive ? (
-                    <span className="text-green-600">Đang hoạt động</span>
+                    <Badge className="bg-green-200 text-green-800">
+                      Đang hoạt động
+                    </Badge>
                   ) : (
-                    <span className="text-red-600">Không hoạt động</span>
+                    <Badge className="bg-red-200 text-red-800">
+                      Không hoạt động
+                    </Badge>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon" className="mr-2 text-blue-500 hover:text-blue-700 hover:bg-blue-100">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="mr-2 text-green-500 hover:text-green-700 hover:bg-green-100">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="mr-2 text-red-500 hover:text-red-700 hover:bg-red-100">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-2 text-blue-500 hover:text-blue-700 hover:bg-blue-100"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Chi tiết người dùng</DialogTitle>
+                        <DialogDescription>
+                          Thông tin chi tiết về người dùng.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <ViewDetailModal user={user} />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-2 text-green-500 hover:text-green-700 hover:bg-green-100"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Cập nhật người dùng</DialogTitle>
+                        <DialogDescription>
+                          Cập nhật thông tin người dùng.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <UpdateUserModal
+                        user={user}
+                        setOpen={setCloseUpdateModal}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog>
+                    <DialogTrigger asChild disabled={user.isActive === true}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-2 text-red-500 hover:text-red-700 hover:bg-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Xóa người dùng</DialogTitle>
+                        <DialogDescription>
+                          Bạn có chắc chắn muốn xóa người dùng này không?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DeleteUserModal
+                        userId={user.id}
+                        setOpen={setCloseDeleteModal}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </main>
-      <CustomPagination />
+      <CustomPagination
+        currentPage={pagination.page}
+        pageSize={pagination.limit}
+        totalItems={pagination.totalItems}
+        totalPages={pagination.totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 };
