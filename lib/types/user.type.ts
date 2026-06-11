@@ -20,4 +20,6 @@ export interface GetUsersQuery {
   filterByStatus?: boolean;
   sortBy?: "username" | "email" | "createdAt";
   sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
 }

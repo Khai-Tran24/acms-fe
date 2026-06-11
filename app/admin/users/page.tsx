@@ -36,11 +36,12 @@ import { getAllUsers } from "@/lib/api/user/user.api";
 import { RoleEnum } from "@/lib/enums/role.enum";
 import { PaginationInfo } from "@/lib/types/reponse.type";
 import { GetUsersQuery, UserData } from "@/lib/types/user.type";
-import { Edit, Eye, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Edit, Eye, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ViewDetailModal } from "./_components/view-detail-modal";
 import { UpdateUserModal } from "./_components/update-user-modal";
 import { DeleteUserModal } from "./_components/delete-user-modal";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 
 const DEFAULT_PAGINATION: PaginationInfo = {
   page: 1,
@@ -48,8 +49,6 @@ const DEFAULT_PAGINATION: PaginationInfo = {
   totalPages: 1,
   totalItems: 0,
 };
-
-const SEARCH_DEBOUNCE_MS = 500;
 
 const UserPage = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
@@ -66,6 +65,9 @@ const UserPage = () => {
   const [sortOrder, setSortOrder] = useState<GetUsersQuery["sortOrder"]>();
   const [, setCloseUpdateModal] = useState(false);
   const [, setCloseDeleteModal] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -73,7 +75,7 @@ const UserPage = () => {
         const response = await getAllUsers({
           page,
           limit,
-          search: search || undefined,
+          search: debouncedSearch || undefined,
           filterByRole,
           filterByStatus,
           sortBy,
@@ -87,7 +89,15 @@ const UserPage = () => {
     };
 
     fetchUserData();
-  }, [page, limit, search, filterByRole, filterByStatus, sortBy, sortOrder]);
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    filterByRole,
+    filterByStatus,
+    sortBy,
+    sortOrder,
+  ]);
 
   const handlePageSizeChange = (pageSize: number) => {
     setLimit(pageSize);
@@ -129,7 +139,26 @@ const UserPage = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Quản lý người dùng</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Quản lý người dùng</h1>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg">
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm người dùng
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Thêm người dùng</DialogTitle>
+              <DialogDescription>
+                Nhập thông tin để tạo người dùng mới.
+              </DialogDescription>
+            </DialogHeader>
+            <div>Hello</div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <main className="rounded-lg bg-white p-4 ring-1 ring-foreground/10 mb-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -143,7 +172,7 @@ const UserPage = () => {
               <Search className="text-gray-500" />
             </InputGroupAddon>
             <InputGroupAddon align="inline-end">
-              {pagination.totalItems} results
+              {pagination.totalItems} kết quả
             </InputGroupAddon>
           </InputGroup>
 
