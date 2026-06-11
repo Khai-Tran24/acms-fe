@@ -443,7 +443,7 @@ const ContractPage = () => {
                       <DropdownMenuContent>
                         <DropdownMenuItem
                           onClick={() =>
-                            router.push(`/admin/contract/${contract.id}`)
+                            router.push(`/contracts/${contract.id}`)
                           }
                         >
                           <Eye className="h-4 w-4" />
