@@ -1,5 +1,6 @@
-import CustomBarChart from "@/components/custom/chart/custom-bar-chart";
-import CustomPieChart from "@/components/custom/chart/custom-pie-chart";
+import CustomBarChart from "@/components/custom/dashboard/chart/custom-bar-chart";
+import CustomPieChart from "@/components/custom/dashboard/chart/custom-pie-chart";
+import { ContractTable } from "@/components/custom/dashboard/contract-table";
 import CardSection from "@/components/custom/section/card-section";
 import { ScrollText } from "lucide-react";
 
@@ -38,7 +39,7 @@ const DashboardPage = () => {
 
   return (
     <div className="p-4">
-      <h1 className='text-2xl font-bold mb-4'>Bảng thống kê</h1>
+      <h1 className="text-2xl font-bold mb-4">Bảng thống kê</h1>
       <div className="grid md:grid-cols-4 gap-2 mb-4">
         {cardData.map((data, index) => (
           <CardSection key={index} data={data} />
@@ -60,6 +61,8 @@ const DashboardPage = () => {
           <CustomPieChart />
         </div>
       </div>
+
+      <ContractTable />
     </div>
   );
 };

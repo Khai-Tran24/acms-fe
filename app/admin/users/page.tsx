@@ -141,7 +141,7 @@ const UserPage = () => {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Quản lý người dùng</h1>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        {/* <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="lg">
               <Plus className="mr-2 h-4 w-4" />
@@ -157,7 +157,7 @@ const UserPage = () => {
             </DialogHeader>
             <div>Hello</div>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
 
       <main className="rounded-lg bg-white p-4 ring-1 ring-foreground/10 mb-4">
