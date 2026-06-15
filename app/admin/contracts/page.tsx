@@ -56,7 +56,6 @@ import { getAllUsers } from "@/lib/api/user/user.api";
 import { UserData } from "@/lib/types/user.type";
 import { CalendarInput } from "@/components/custom/input/calendar-input";
 import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
-import { formatDate } from "@/lib/helper/date-formatter.helper";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +70,7 @@ import {
 } from "@/components/custom/contract/contract-utils";
 import { CreateContractModal } from "@/components/custom/contract/create-contract-modal";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { formatDate } from "date-fns";
 
 const DEFAULT_PAGINATION: PaginationInfo = {
   page: 1,
@@ -357,7 +357,7 @@ const ContractPage = () => {
             </Button>
           </div>
         </div>
-        <div className="mb-4 flex items-center gap-4">
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           <CalendarInput
             placeholder="Ngày bắt đầu đăng ký"
             date={startRegisterDate}
@@ -400,13 +400,13 @@ const ContractPage = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center">
+                <TableCell colSpan={9} className="py-8 text-center">
                   Đang tải danh sách hợp đồng...
                 </TableCell>
               </TableRow>
             ) : contractData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center">
+                <TableCell colSpan={9} className="py-8 text-center">
                   Chưa có hợp đồng phù hợp.
                 </TableCell>
               </TableRow>
@@ -430,11 +430,15 @@ const ContractPage = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {formatDate(contract.registerStartDate)} -{" "}
-                    {formatDate(contract.registerExpiredDate)}
+                    {formatDate(contract.registerStartDate, "HH:mm dd-MM-yyyy")}{" "}
+                    -{" "}
+                    {formatDate(
+                      contract.registerExpiredDate,
+                      "HH:mm dd-MM-yyyy",
+                    )}
                   </TableCell>
                   <TableCell>
-                    {formatDate(contract.auctionDate)} -{" "}
+                    {formatDate(contract.auctionDate, "HH:mm dd-MM-yyyy")} -{" "}
                     {formatDate(
                       String(
                         new Date(
@@ -442,6 +446,7 @@ const ContractPage = () => {
                             contract.auctionTime * 60000,
                         ),
                       ),
+                      "HH:mm dd-MM-yyyy",
                     )}
                   </TableCell>
                   <TableCell className="text-center">

@@ -384,13 +384,13 @@ const ContractPage = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center">
+                <TableCell colSpan={9} className="py-8 text-center">
                   Đang tải danh sách hợp đồng...
                 </TableCell>
               </TableRow>
             ) : contractData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center">
+                <TableCell colSpan={9} className="py-8 text-center">
                   Chưa có hợp đồng phù hợp.
                 </TableCell>
               </TableRow>

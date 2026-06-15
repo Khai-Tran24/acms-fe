@@ -1,11 +1,8 @@
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "../../ui/calendar";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../../ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
+import { formatDate } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface CalendarInputProps {
   date: string;
@@ -23,17 +20,12 @@ export const CalendarInput = ({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <InputGroup>
-          <InputGroupAddon>
-            <CalendarIcon />
-          </InputGroupAddon>
-          <InputGroupInput
-            type="string"
-            placeholder={placeholder || "DD-MM-YYYY"}
-            value={date}
-            onChange={(e) => onDateChange(e.target.value)}
-          />
-        </InputGroup>
+        <Button variant="outline" className="justify-start">
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date
+            ? formatDate(new Date(date), "dd-MM-yyyy")
+            : placeholder || "Select date"}
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <Calendar
@@ -42,7 +34,7 @@ export const CalendarInput = ({
           selected={date ? new Date(date) : undefined}
           onSelect={(selectedDate) => {
             if (selectedDate) {
-              onDateChange(selectedDate.toISOString().split("T")[0]);
+              onDateChange(formatDate(selectedDate, "yyyy-MM-dd"));
             }
           }}
           {...calendarProps}

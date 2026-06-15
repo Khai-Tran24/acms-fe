@@ -1,7 +1,8 @@
-import CustomBarChart from "@/components/custom/chart/custom-bar-chart";
-import CustomPieChart from "@/components/custom/chart/custom-pie-chart";
+import CustomBarChart from "@/components/custom/dashboard/chart/custom-bar-chart";
+import CustomPieChart from "@/components/custom/dashboard/chart/custom-pie-chart";
 import CardSection from "@/components/custom/section/card-section";
 import { ScrollText } from "lucide-react";
+import { ContractTable } from "../../../components/custom/dashboard/contract-table";
 
 const DashboardPage = () => {
   const cardData = [
@@ -60,6 +61,8 @@ const DashboardPage = () => {
           <CustomPieChart />
         </div>
       </div>
+
+      <ContractTable />
     </div>
   );
 };
