@@ -46,7 +46,7 @@ export const getUserId = (user?: UserData | string) => {
 
 export const toDateInputValue = (value?: string) => {
   if (!value) return "";
-  return value.slice(0, 10);
+  return value;
 };
 
 export const getContractDefaults = (contract?: ContractData) => ({

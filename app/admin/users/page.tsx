@@ -189,7 +189,13 @@ const UserPage = () => {
                   <SelectItem value="all">Tất cả vai trò</SelectItem>
                   {Object.values(RoleEnum).map((role) => (
                     <SelectItem key={role} value={role}>
-                      {role}
+                      {role === RoleEnum.AUCTIONEER
+                        ? "Đấu giá viên"
+                        : role === RoleEnum.SECRETARY
+                          ? "Thư ký"
+                          : role === RoleEnum.ADMIN
+                            ? "Quản trị viên"
+                            : role}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -273,7 +279,7 @@ const UserPage = () => {
           <TableBody>
             {userData.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.id.slice(0, 8)}...</TableCell>
+                <TableCell>{user.id}</TableCell>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>

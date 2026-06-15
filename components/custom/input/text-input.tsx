@@ -12,6 +12,7 @@ interface TextInputProps {
   label?: string;
   type?: ComponentProps<typeof Input>["type"];
   className?: string;
+  disabled?: boolean;
 }
 
 export const TextInput = ({
@@ -22,6 +23,7 @@ export const TextInput = ({
   label,
   type = "text",
   className,
+  disabled = false,
 }: TextInputProps) => {
   return (
     <Field className={className}>
@@ -47,6 +49,7 @@ export const TextInput = ({
             }}
           />
         )}
+        disabled={disabled}
         name={name}
       />
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}

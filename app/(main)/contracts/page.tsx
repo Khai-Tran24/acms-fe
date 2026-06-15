@@ -130,7 +130,17 @@ const ContractPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filterByUserId, limit, page, search, sortBy, sortOrder, startRegisterDate, endRegisterDate, auctionDate]);
+  }, [
+    filterByUserId,
+    limit,
+    page,
+    search,
+    sortBy,
+    sortOrder,
+    startRegisterDate,
+    endRegisterDate,
+    auctionDate,
+  ]);
 
   const seperateUsersByRole = (users: UserData[]) => {
     const auctioneers = users.filter((user) => user.role === "AUCTIONEER");
@@ -397,7 +407,7 @@ const ContractPage = () => {
             ) : (
               contractData.map((contract) => (
                 <TableRow key={contract.id}>
-                  <TableCell>{contract.id.slice(0, 8)}...</TableCell>
+                  <TableCell>{contract.id}</TableCell>
                   <TableCell className="font-medium">
                     {contract.title}
                   </TableCell>
