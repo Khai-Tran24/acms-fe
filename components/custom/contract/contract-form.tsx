@@ -22,6 +22,8 @@ import * as yup from "yup";
 import { CONTRACT_STATUS_LABELS, getContractDefaults } from "./contract-utils";
 import { TextInput } from "@/components/custom/input/text-input";
 import { PriceInput } from "@/components/custom/input/price-input";
+import { CalendarInput } from "@/components/custom/input/calendar-input";
+import { Separator } from "@/components/ui/separator";
 
 interface ContractFormValues {
   regulationNumber: string;
@@ -161,163 +163,248 @@ export const ContractForm = ({
 
   return (
     <form onSubmit={handleSubmit(submitForm)} className="space-y-5 py-2">
-      <FieldSet className="grid gap-4 md:grid-cols-2">
-        <TextInput
-          control={control}
-          name="regulationNumber"
-          label="Số quy chế"
-          error={errors.regulationNumber?.message}
-        />
-        <TextInput
-          control={control}
-          name="title"
-          label="Tên hợp đồng"
-          error={errors.title?.message}
-        />
-        <PriceInput
-          control={control}
-          name="startingPrice"
-          label="Giá khởi điểm"
-          error={errors.startingPrice?.message}
-        />
-        <PriceInput
-          control={control}
-          name="deposit"
-          label="Tiền đặt cọc"
-          error={errors.deposit?.message}
-        />
-        <PriceInput
-          control={control}
-          name="applicationFee"
-          label="Phí hồ sơ"
-          error={errors.applicationFee?.message}
-        />
-        <TextInput
-          control={control}
-          name="auctionTime"
-          label="Thời lượng đấu giá"
-          type="number"
-          error={errors.auctionTime?.message}
-        />
-        <TextInput
-          control={control}
-          name="registerStartDate"
-          label="Ngày bắt đầu đăng ký"
-          type="date"
-          error={errors.registerStartDate?.message}
-        />
-        <TextInput
-          control={control}
-          name="registerExpiredDate"
-          label="Ngày hết hạn đăng ký"
-          type="date"
-          error={errors.registerExpiredDate?.message}
-        />
-        <TextInput
-          control={control}
-          name="auctionDate"
-          label="Ngày đấu giá"
-          type="date"
-          error={errors.auctionDate?.message}
-        />
-        <Controller
-          name="status"
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Trạng thái</FieldLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(ContractStatusEnum).map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {CONTRACT_STATUS_LABELS[status]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.status?.message && (
-                <p className="text-sm text-red-500">{errors.status.message}</p>
+      <FieldSet className="space-y-2">
+        <div>
+          <h2 className="mb-2 text-lg font-semibold">Thông tin hợp đồng</h2>
+          <Separator className="mb-2" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <TextInput
+              control={control}
+              name="regulationNumber"
+              label="Số quy chế"
+              error={errors.regulationNumber?.message}
+            />
+            <TextInput
+              control={control}
+              name="title"
+              label="Tên hợp đồng"
+              error={errors.title?.message}
+            />
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Trạng thái</FieldLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(ContractStatusEnum).map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {CONTRACT_STATUS_LABELS[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.status?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.status.message}
+                    </p>
+                  )}
+                </Field>
               )}
-            </Field>
-          )}
-        />
-        <Controller
-          name="auctioneer"
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Đấu giá viên</FieldLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn đấu giá viên" />
-                </SelectTrigger>
-                <SelectContent>
-                  {auctioneers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.username} - {user.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.auctioneer?.message && (
-                <p className="text-sm text-red-500">
-                  {errors.auctioneer.message}
-                </p>
+            />
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-2 text-lg font-semibold">Chi tiết đấu giá</h2>
+          <Separator className="mb-2" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <PriceInput
+              control={control}
+              name="applicationFee"
+              label="Phí hồ sơ"
+              error={errors.applicationFee?.message}
+            />
+            <PriceInput
+              control={control}
+              name="deposit"
+              label="Tiền đặt cọc"
+              error={errors.deposit?.message}
+            />
+            <PriceInput
+              control={control}
+              name="startingPrice"
+              label="Giá khởi điểm"
+              error={errors.startingPrice?.message}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h2 className="mb-2 text-lg font-semibold">Lịch trình</h2>
+          <Separator className="mb-2" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Controller
+              name="registerStartDate"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Ngày bắt đầu đăng ký</FieldLabel>
+                  <CalendarInput
+                    date={field.value}
+                    onDateChange={field.onChange}
+                    placeholder="Chọn ngày bắt đầu"
+                    enableTime={true}
+                  />
+                  {errors.registerStartDate?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.registerStartDate.message}
+                    </p>
+                  )}
+                </Field>
               )}
-            </Field>
-          )}
-        />
-        <Controller
-          name="secretary"
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Thư ký</FieldLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn thư ký" />
-                </SelectTrigger>
-                <SelectContent>
-                  {secretaries.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.username} - {user.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.secretary?.message && (
-                <p className="text-sm text-red-500">
-                  {errors.secretary.message}
-                </p>
+            />
+            <Controller
+              name="registerExpiredDate"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Ngày hết hạn đăng ký</FieldLabel>
+                  <CalendarInput
+                    date={field.value}
+                    onDateChange={field.onChange}
+                    placeholder="Chọn ngày hết hạn"
+                    enableTime={true}
+                  />
+                  {errors.registerExpiredDate?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.registerExpiredDate.message}
+                    </p>
+                  )}
+                </Field>
               )}
-            </Field>
-          )}
-        />
-        <TextInput
-          control={control}
-          name="fileUrl"
-          label="Link tài liệu"
-          className="md:col-span-2"
-          error={errors.fileUrl?.message}
-        />
-        <Controller
-          name="description"
-          control={control}
-          render={({ field }) => (
-            <Field className="md:col-span-2">
-              <FieldLabel>Mô tả</FieldLabel>
-              <Textarea {...field} rows={4} placeholder="Nhập mô tả hợp đồng" />
-              {errors.description?.message && (
-                <p className="text-sm text-red-500">
-                  {errors.description.message}
-                </p>
+            />
+            <Controller
+              name="auctionDate"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Ngày đấu giá</FieldLabel>
+                  <CalendarInput
+                    date={field.value}
+                    onDateChange={field.onChange}
+                    placeholder="Chọn ngày đấu giá"
+                    enableTime={true}
+                  />
+                  {errors.auctionDate?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.auctionDate.message}
+                    </p>
+                  )}
+                </Field>
               )}
-            </Field>
-          )}
-        />
+            />
+            <TextInput
+              control={control}
+              name="auctionTime"
+              label="Thời lượng đấu giá"
+              type="number"
+              error={errors.auctionTime?.message}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h2 className="mb-2 text-lg font-semibold">Nhân sự</h2>
+          <Separator className="mb-2" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Controller
+              name="auctioneer"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Đấu giá viên</FieldLabel>
+                  <Select
+                    value={field.value.toString()}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn đấu giá viên" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {auctioneers.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.username} - {user.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.auctioneer?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.auctioneer.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="secretary"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Thư ký</FieldLabel>
+                  <Select
+                    value={field.value.toString()}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn thư ký" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {secretaries.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.username} - {user.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.secretary?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.secretary.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-2 text-lg font-semibold">Tài liệu</h2>
+          <Separator className="mb-2" />
+          <div>
+            <TextInput
+              control={control}
+              name="fileUrl"
+              label="Link tài liệu"
+              className="md:col-span-2"
+              error={errors.fileUrl?.message}
+              disabled={true}
+            />
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <Field className="md:col-span-2">
+                  <FieldLabel>Mô tả</FieldLabel>
+                  <Textarea
+                    {...field}
+                    rows={4}
+                    placeholder="Nhập mô tả hợp đồng"
+                    disabled={true}
+                  />
+                  {errors.description?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.description.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+        </div>
       </FieldSet>
 
       <div className="flex justify-end border-t pt-4">
