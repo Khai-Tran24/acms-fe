@@ -12,7 +12,7 @@ import {
   CONTRACT_STATUS_LABELS,
   getStatusClassName,
 } from "../contract/contract-utils";
-import { ContractStatusEnum } from "@/lib/enums/contract.enum";
+import { ContractStatus } from "@/lib/enums/contract.enum";
 
 const mockData = [
   {
@@ -27,7 +27,7 @@ const mockData = [
     registerExpiredDate: "2026-06-15T17:00:00.000Z",
     auctionDate: "2026-06-25T17:00:00.000Z",
     auctionTime: 90,
-    status: ContractStatusEnum.DANG_THUC_HIEN,
+    status: ContractStatus.DANG_DAU_GIA,
   },
   {
     id: "2",
@@ -42,7 +42,7 @@ const mockData = [
     registerExpiredDate: "2026-06-09T17:00:00.000Z",
     auctionDate: "2026-10-24T17:00:00.000Z",
     auctionTime: 30,
-    status: ContractStatusEnum.MOI,
+    status: ContractStatus.MOI,
   },
 ];
 export const ContractTable = () => {

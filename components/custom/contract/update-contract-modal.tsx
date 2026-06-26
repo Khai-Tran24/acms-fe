@@ -24,7 +24,7 @@ export const UpdateContractModal = ({
     setIsSubmitting(true);
     try {
       const response = await updateContract(contract.id, payload);
-      if (response.status === "success") {
+      if (response.success === true) {
         toast.success("Hợp đồng đã được cập nhật thành công.");
         setOpen(false);
         onSuccess();

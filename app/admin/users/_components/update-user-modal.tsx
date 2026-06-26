@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { getUserDetails, updateUser } from "@/lib/api/user/user.api";
 import { RoleEnum } from "@/lib/enums/role.enum";
 import { useToast } from "@/lib/hooks/use-toast";
-import { UserData, UserDetails } from "@/lib/types/user.type";
+import { UserData } from "@/lib/types/user.type";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -41,12 +41,11 @@ const updateUserSchema = yup.object().shape({
 
 export const UpdateUserModal = ({
   user,
-  setOpen,
 }: {
   user: UserData;
   setOpen: (open: boolean) => void;
 }) => {
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [, setUserDetails] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
@@ -80,19 +79,15 @@ export const UpdateUserModal = ({
     fetchUserDetails();
   }, [user.id]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: yup.InferType<typeof updateUserSchema>) => {
     setIsLoading(true);
     try {
-      const resposne = await updateUser(user.id, {
-        username: data.username,
-        email: data.email,
-        role: data?.role,
-      });
+      const resposne = await updateUser(user.id, data);
 
-      if (resposne.status === "success") {
+      if (resposne.success === true) {
         toast.success("Người dùng đã được cập nhật thành công.");
         setTimeout(() => {
+          setIsLoading(false);
           window.location.reload();
         }, 1000);
       } else {
@@ -102,8 +97,6 @@ export const UpdateUserModal = ({
       toast.error(
         (error as Error).message || "Có lỗi xảy ra khi cập nhật người dùng.",
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -167,7 +160,10 @@ export const UpdateUserModal = ({
                 onValueChange={(value) => field.onChange(value)}
                 defaultValue={field.value}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger
+                  className="w-full"
+                  disabled={user.role === RoleEnum.ADMIN}
+                >
                   <SelectValue placeholder="Chọn vai trò" />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,6 +207,7 @@ export const UpdateUserModal = ({
                 <Switch
                   checked={field.value}
                   onCheckedChange={(checked) => field.onChange(checked)}
+                  disabled={user.role === RoleEnum.ADMIN}
                 />
                 <Badge
                   className={`text-sm ${field.value ? "text-green-800 bg-green-200" : "text-red-800 bg-red-200"}`}

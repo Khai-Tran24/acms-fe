@@ -1,17 +1,13 @@
 export interface Response<T> {
-  status: string;
+  success: boolean;
   statusCode: number;
   message: string;
   data: T;
 }
 
-export interface PaginatedResponse<T> extends Response<T> {
-  pagination: PaginationInfo;
-}
-
-export interface PaginationInfo {
+export interface Pagination {
   page: number;
   limit: number;
-  totalPages: number;
   totalItems: number;
+  totalPages: number;
 }

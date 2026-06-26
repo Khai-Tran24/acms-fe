@@ -1,15 +1,17 @@
 import {
   ContractData,
-  ContractPayload,
+  ContractsResponse,
   GetContractsQuery,
+  ContractPayload,
 } from "@/lib/types/contract.type";
 import api from "../api";
-import { PaginatedResponse, Response } from "@/lib/types/reponse.type";
+import { Response } from "@/lib/types/reponse.type";
+import { RoleEnum } from "@/lib/enums/role.enum";
 
 const getAllContracts = async (query?: GetContractsQuery) => {
   try {
     const response = await api.get("/contracts", { params: query });
-    return response.data as PaginatedResponse<ContractData[]>;
+    return response.data as Response<ContractsResponse>;
   } catch (error) {
     console.error("Error fetching contracts:", error);
     throw error;
@@ -59,10 +61,24 @@ const deleteContract = async (id: string) => {
   }
 };
 
+const getContractFilterOptions = async () => {
+  try {
+    const response = await api.get("/contracts/filter-options");
+    return response.data as Response<{
+      years: number[];
+      caseOfficers: { id: string; username: string; role: RoleEnum }[];
+    }>;
+  } catch (error) {
+    console.error("Error fetching contract filter options:", error);
+    throw error;
+  }
+};
+
 export {
   getAllContracts,
   getContractById,
   createContract,
   updateContract,
   deleteContract,
+  getContractFilterOptions,
 };
