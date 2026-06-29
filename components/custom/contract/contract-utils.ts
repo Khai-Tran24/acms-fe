@@ -3,7 +3,7 @@ import {
   PaymentStatus,
   PropertyType,
 } from "@/lib/enums/contract.enum";
-import { ContractData, ContractPayload } from "@/lib/types/contract.type";
+import { ContractPayload } from "@/lib/types/contract.type";
 import { UserData } from "@/lib/types/user.type";
 
 export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
@@ -99,11 +99,11 @@ export const getContractDefaults = (contract?: ContractPayload) => ({
   },
   caseOfficer: contract?.caseOfficer ?? "",
   startingPrice: contract?.startingPrice ?? 0,
-  winningPrice: contract?.winningPrice ?? 0,
-  discountPrice: {
-    amount: contract?.discountPrice?.amount ?? 0,
-    times: contract?.discountPrice?.times ?? 0,
-  },
+  winningPrice: contract?.winningPrice ?? null,
+  // discountPrice: {
+  //   amount: contract?.discountPrice?.amount ?? 0,
+  //   times: contract?.discountPrice?.times ?? 0,
+  // },
   endRegisterDate: contract?.endRegisterDate ?? "",
   auctionDate: contract?.auctionDate ?? "",
   status: contract?.status ?? ContractStatus.MOI,

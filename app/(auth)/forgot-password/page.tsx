@@ -38,7 +38,7 @@ const ForgotPasswordPage = () => {
 
     try {
       const response = await forgotPassword(data.email);
-      if (response.status === "success") {
+      if (response.success === true) {
         toast.success(
           "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến.",
         );

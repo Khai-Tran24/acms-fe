@@ -57,7 +57,7 @@ export const ResetPasswordForm = ({
         data.password,
       );
 
-      if (response.status === "success") {
+      if (response.success === true) {
         toast.success("Mật khẩu của bạn đã được đặt lại thành công.");
         setTimeout(() => {
           router.push("/sign-in");

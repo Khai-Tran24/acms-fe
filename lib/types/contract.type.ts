@@ -20,8 +20,8 @@ export interface ContractData {
   propertyOwner: PropertyOwner;
   caseOfficer: CaseOfficer;
   startingPrice: number;
-  winningPrice?: number;
-  discountPrice?: DiscountPrice;
+  winningPrice?: number | null;
+  discountPrice?: DiscountPrice[];
   endRegisterDate: Date | string;
   auctionDate: Date | string;
   status: ContractStatus;
@@ -34,7 +34,12 @@ export interface ContractData {
 
 export type ContractPayload = Omit<
   ContractData,
-  "id" | "createdBy" | "createdAt" | "updatedAt" | "caseOfficer"
+  | "id"
+  | "createdBy"
+  | "createdAt"
+  | "updatedAt"
+  | "caseOfficer"
+  | "discountPrice"
 > & { caseOfficer: string };
 
 export interface PropertyOwner {

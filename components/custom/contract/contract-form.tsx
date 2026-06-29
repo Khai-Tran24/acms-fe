@@ -60,18 +60,7 @@ const contractSchema: yup.ObjectSchema<ContractPayload> = yup.object({
   winningPrice: yup
     .number()
     .typeError("Giá trúng thầu phải là một số")
-    .optional(),
-  discountPrice: yup
-    .object({
-      amount: yup
-        .number()
-        .typeError("Số tiền giảm giá phải là một số")
-        .optional(),
-      times: yup
-        .number()
-        .typeError("Số lần giảm giá phải là một số")
-        .optional(),
-    })
+    .nullable()
     .optional(),
   endRegisterDate: yup.string().required("Ngày kết thúc đăng ký là bắt buộc"),
   auctionDate: yup.string().required("Ngày đấu giá là bắt buộc"),
@@ -92,6 +81,7 @@ const contractSchema: yup.ObjectSchema<ContractPayload> = yup.object({
 });
 
 interface ContractFormProps {
+  type: "create" | "update";
   contract?: ContractData;
   submitLabel: string;
   isSubmitting?: boolean;
@@ -99,6 +89,7 @@ interface ContractFormProps {
 }
 
 export const ContractForm = ({
+  type,
   contract,
   submitLabel,
   isSubmitting = false,
@@ -153,9 +144,9 @@ export const ContractForm = ({
 
   return (
     <form onSubmit={handleSubmit(submitForm)} className="space-y-6 py-2">
-      <FieldSet className="space-y-6">
+      <FieldSet className="space-y-2">
         <section>
-          <div className="mb-3">
+          <div className="mb-2">
             <h2 className="text-lg font-semibold">Thông tin chung</h2>
             <p className="text-sm text-muted-foreground">
               Mã hợp đồng, năm và thông tin tài sản.
@@ -214,31 +205,11 @@ export const ContractForm = ({
                 </Field>
               )}
             />
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-3">
-            <h2 className="text-lg font-semibold">Chủ sở hữu và phụ trách</h2>
-            <p className="text-sm text-muted-foreground">
-              Thông tin liên hệ của chủ sở hữu và cán bộ phụ trách hồ sơ.
-            </p>
-          </div>
-          <Separator className="mb-4" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <TextInput
+            <PriceInput
               control={control}
-              name="propertyOwner.name"
-              label="Tên chủ sở hữu"
-              placeholder="Nhập tên chủ sở hữu"
-              error={errors.propertyOwner?.name?.message}
-            />
-            <TextInput
-              control={control}
-              name="propertyOwner.phone"
-              label="Số điện thoại chủ sở hữu"
-              placeholder="Nhập số điện thoại"
-              error={errors.propertyOwner?.phone?.message}
+              name="startingPrice"
+              label="Giá khởi điểm"
+              error={errors.startingPrice?.message}
             />
             <Controller
               control={control}
@@ -273,45 +244,33 @@ export const ContractForm = ({
         </section>
 
         <section>
-          <div className="mb-3">
-            <h2 className="text-lg font-semibold">Giá và giảm giá</h2>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold">Thông tin chủ sở hữu</h2>
             <p className="text-sm text-muted-foreground">
-              Nhập giá khởi điểm, giá trúng và thông tin giảm giá.
+              Thông tin liên hệ của chủ sở hữu.
             </p>
           </div>
           <Separator className="mb-4" />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <PriceInput
+            <TextInput
               control={control}
-              name="startingPrice"
-              label="Giá khởi điểm"
-              error={errors.startingPrice?.message}
-            />
-            <PriceInput
-              control={control}
-              name="winningPrice"
-              label="Giá trúng thầu"
-              error={errors.winningPrice?.message}
-            />
-            <PriceInput
-              control={control}
-              name="discountPrice.amount"
-              label="Số tiền giảm giá"
-              error={errors.discountPrice?.amount?.message}
+              name="propertyOwner.name"
+              label="Tên chủ sở hữu"
+              placeholder="Nhập tên chủ sở hữu"
+              error={errors.propertyOwner?.name?.message}
             />
             <TextInput
               control={control}
-              name="discountPrice.times"
-              label="Số lần giảm giá"
-              type="number"
-              placeholder="Nhập số lần giảm giá"
-              error={errors.discountPrice?.times?.message}
+              name="propertyOwner.phone"
+              label="Số điện thoại chủ sở hữu"
+              placeholder="Nhập số điện thoại"
+              error={errors.propertyOwner?.phone?.message}
             />
           </div>
         </section>
 
         <section>
-          <div className="mb-3">
+          <div className="mb-2">
             <h2 className="text-lg font-semibold">Lịch trình</h2>
             <p className="text-sm text-muted-foreground">
               Chọn thời điểm kết thúc đăng ký và ngày đấu giá.
@@ -363,7 +322,7 @@ export const ContractForm = ({
         </section>
 
         <section>
-          <div className="mb-3">
+          <div className="mb-2">
             <h2 className="text-lg font-semibold">Trạng thái</h2>
             <p className="text-sm text-muted-foreground">
               Chọn trạng thái xử lý và trạng thái thanh toán.
@@ -433,7 +392,7 @@ export const ContractForm = ({
         </section>
 
         <section>
-          <div className="mb-3">
+          <div className="mb-2">
             <h2 className="text-lg font-semibold">Người trúng thầu</h2>
             <p className="text-sm text-muted-foreground">
               Thông tin người thắng thầu của hợp đồng.
@@ -454,6 +413,12 @@ export const ContractForm = ({
               label="Số điện thoại người trúng thầu"
               placeholder="Nhập số điện thoại"
               error={errors.winner?.phone?.message}
+            />
+            <PriceInput
+              control={control}
+              name="winningPrice"
+              label="Giá trúng thầu"
+              error={errors.winningPrice?.message}
             />
           </div>
         </section>

@@ -7,17 +7,15 @@ import { getContractById } from "@/lib/api/contract/contract.api";
 import { ContractData } from "@/lib/types/contract.type";
 import {
   ArrowLeft,
+  Banknote,
   CalendarDays,
-  Download,
   Edit,
-  FileText,
   Gavel,
-  Upload,
+  SquarePercent,
   UserRound,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
 import { formatDate } from "@/lib/helper/date-formatter.helper";
 import {
   Dialog,
@@ -28,25 +26,23 @@ import {
 } from "@/components/ui/dialog";
 import {
   CONTRACT_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  PROPERTY_TYPE_LABELS,
+  getPaymentStatusClassName,
   getStatusClassName,
   getUserDisplayName,
 } from "@/components/custom/contract/contract-utils";
 import { UpdateContractModal } from "@/components/custom/contract/update-contract-modal";
-
-const mockfile = [
-  {
-    name: "Quy-che-dau-gia.pdf",
-    url: "https://example.com/files/quy-che-dau-gia.pdf",
-  },
-  {
-    name: "Bao-cao-tham-dinh.pdf",
-    url: "https://example.com/files/bao-cao-tham-dinh.pdf",
-  },
-  {
-    name: "Hop-dong-mau.pdf",
-    url: "https://example.com/files/hop-dong-mau.pdf",
-  },
-];
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
+import { UpdateContractDiscountPriceForm } from "@/components/custom/contract/update-discount";
 
 const ContractDetailPage = () => {
   const params = useParams<{ id: string }>();
@@ -57,6 +53,8 @@ const ContractDetailPage = () => {
   const [editingContract, setEditingContract] = useState<ContractData | null>(
     null,
   );
+  const [updateDiscountModal, setUpdateDiscountModal] =
+    useState<ContractData | null>(null);
 
   const fetchContract = useCallback(async () => {
     setIsLoading(true);
@@ -79,6 +77,8 @@ const ContractDetailPage = () => {
     };
     loadContract();
   }, [params.id, fetchContract]);
+
+  console.log("Contract detail page render:", contract?.discountPrice);
 
   if (isLoading) {
     return (
@@ -121,50 +121,113 @@ const ContractDetailPage = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <section className="rounded-lg bg-white p-5 ring-1 ring-foreground/10">
-          <div className="mb-4 flex items-center gap-2">
-            <Gavel className="h-5 w-5 text-violet-600" />
-            <h2 className="text-lg font-semibold">Thông tin đấu giá</h2>
-            <Badge className={getStatusClassName(contract.status)}>
-              {CONTRACT_STATUS_LABELS[contract.status]}
-            </Badge>
-          </div>
-          <div className="space-y-3">
-            <DetailRow label="Số quy chế" value={contract.regulationNumber} />
-            <DetailRow label="Tên tài sản" value={contract.title} />
-            <DetailRow
-              label="Giá khởi điểm"
-              value={formatCurrency(contract.startingPrice)}
-            />
-            <DetailRow
-              label="Tiền đặt cọc"
-              value={formatCurrency(contract.deposit)}
-            />
-            <DetailRow
-              label="Phí hồ sơ"
-              value={formatCurrency(contract.applicationFee)}
-            />
-          </div>
-        </section>
-        <div className="space-y-4 h-full ">
+      <div className="grid gap-4 xl:grid-cols-2 h-[90]">
+        <div className="space-y-4">
+          <section className="rounded-lg bg-white p-5 ring-1 ring-foreground/10">
+            <div className="mb-4 flex items-center gap-2">
+              <Gavel className="h-5 w-5 text-violet-600" />
+              <h2 className="text-lg font-semibold">Thông tin hợp đồng</h2>
+              <Badge className={getStatusClassName(contract.status)}>
+                {CONTRACT_STATUS_LABELS[contract.status]}
+              </Badge>
+              <Badge
+                className={getPaymentStatusClassName(contract.paymentStatus)}
+              >
+                {PAYMENT_STATUS_LABELS[contract.paymentStatus]}
+              </Badge>
+            </div>
+            <div className="space-y-3">
+              <DetailRow label="Mã hợp đồng" value={contract.contractNumber} />
+              <DetailRow
+                label="Năm hợp đồng"
+                value={String(contract.contractYear)}
+              />
+              <DetailRow label="Tên tài sản" value={contract.propertyName} />
+              <DetailRow
+                label="Loại tài sản"
+                value={PROPERTY_TYPE_LABELS[contract.propertyType]}
+              />
+              <DetailRow
+                label="Giá khởi điểm"
+                value={formatCurrency(contract.startingPrice)}
+              />
+              <DetailRow
+                label="Giá trúng đấu giá"
+                value={
+                  contract.winningPrice !== undefined
+                    ? formatCurrency(Number(contract.winningPrice))
+                    : "Chưa cập nhật"
+                }
+              />
+            </div>
+          </section>
+          <section className="rounded-lg bg-white p-5 ring-1 ring-foreground/10 ">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <div className="mb-4 flex items-center gap-2">
+                <Banknote className="h-5 w-5 text-amber-600" />
+                <h2 className="text-lg font-semibold">Thông tin giảm giá</h2>
+              </div>
+              <div>
+                <Button onClick={() => setUpdateDiscountModal(contract)}>
+                  <SquarePercent /> Thêm giảm giá
+                </Button>
+              </div>
+            </div>
+            <div className="h-[18.5vh] overflow-y-scroll">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Lần giảm giá</TableHead>
+                    <TableHead>Giá giảm</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contract?.discountPrice &&
+                    contract?.discountPrice.map((discount, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="p-3 text-sm font-medium">
+                          {discount.times}
+                        </TableCell>
+                        <TableCell className="p-3 text-sm font-medium">
+                          {formatCurrency(discount.amount || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </section>
+        </div>
+        <div className="space-y-4">
           <section className="rounded-lg bg-white p-5 ring-1 ring-foreground/10">
             <div className="mb-4 flex items-center gap-2">
               <UserRound className="h-5 w-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold">Phân công</h2>
+              <h2 className="text-lg font-semibold">Người liên quan</h2>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <InfoBlock
-                label="Đấu giá viên"
-                value={getUserDisplayName(contract.auctioneer)}
-              />
-              <InfoBlock
-                label="Thư ký"
-                value={getUserDisplayName(contract.secretary)}
+                label="Cán bộ phụ trách"
+                value={getCaseOfficerDisplayName(contract.caseOfficer)}
               />
               <InfoBlock
                 label="Người tạo"
                 value={getUserDisplayName(contract.createdBy)}
+              />
+              <InfoBlock
+                label="Người trúng"
+                value={getWinnerDisplayName(contract)}
+              />
+              <InfoBlock
+                label="Liên hệ người trúng"
+                value={getWinnerPhone(contract)}
+              />
+              <InfoBlock
+                label="Chủ sở hữu"
+                value={getPropertyOwnerDisplayName(contract)}
+              />
+              <InfoBlock
+                label="Liên hệ chủ sở hữu"
+                value={getPropertyOwnerPhone(contract)}
               />
             </div>
           </section>
@@ -175,66 +238,50 @@ const ContractDetailPage = () => {
             </div>
             <div className="space-y-3">
               <InfoBlock
-                label="Thời gian đăng ký"
-                value={`${formatDate(contract.registerStartDate)} - ${formatDate(contract.registerExpiredDate)}`}
+                label="Hạn đăng ký"
+                value={formatDate(contract.endRegisterDate as string)}
               />
               <InfoBlock
-                label={`Thời gian đấu giá (${contract.auctionTime} phút)`}
-                value={`${formatDate(contract.auctionDate)} - ${formatDate(
-                  String(
-                    new Date(
-                      new Date(contract.auctionDate).getTime() +
-                        contract.auctionTime * 60000,
-                    ),
-                  ),
-                )}`}
+                label="Thời gian đấu giá"
+                value={formatDate(contract.auctionDate as string)}
+              />
+              <InfoBlock
+                label="Tạo lúc"
+                value={formatDate(contract.createdAt)}
+              />
+              <InfoBlock
+                label="Cập nhật lúc"
+                value={formatDate(contract.updatedAt)}
               />
             </div>
           </section>
         </div>
       </div>
 
-      <section className="rounded-lg bg-white p-5 ring-1 ring-foreground/10">
-        <div className="flex justify-between">
-          <div className="mb-4 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-slate-700" />
-            <h2 className="text-lg font-semibold">Tài liệu</h2>
-          </div>
-          <Button>
-            <Upload className="h-4 w-4" />
-            Tải lên
-          </Button>
-        </div>
-        {contract.fileUrl ? (
-          <div className="space-y-3">
-            {mockfile.map((file, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between gap-4 py-2">
-                  <span className="text-sm text-muted-foreground">
-                    {file.name}
-                  </span>
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-                <Separator />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Chưa có tài liệu đính kèm.
-            </p>
-          </div>
-        )}
-      </section>
+      <Dialog
+        open={Boolean(updateDiscountModal)}
+        onOpenChange={(open) => {
+          if (!open) setUpdateDiscountModal(null);
+        }}
+      >
+        <DialogContent className="overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cập nhật giảm giá</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin giảm giá hợp đồng đang chọn.
+            </DialogDescription>
+          </DialogHeader>
+          {updateDiscountModal && (
+            <UpdateContractDiscountPriceForm
+              id={updateDiscountModal.id}
+              setOpen={(open) => {
+                if (!open) setUpdateDiscountModal(null);
+              }}
+              onSuccess={fetchContract}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(editingContract)}
@@ -263,6 +310,27 @@ const ContractDetailPage = () => {
     </div>
   );
 };
+
+const getCaseOfficerDisplayName = (
+  caseOfficer: ContractData["caseOfficer"],
+) => {
+  if (!caseOfficer) return "Chưa phân công";
+  return (
+    caseOfficer.username || caseOfficer.email || String(caseOfficer.id ?? "")
+  );
+};
+
+const getWinnerDisplayName = (contract: ContractData) =>
+  contract.winner?.name || "Chưa cập nhật";
+
+const getWinnerPhone = (contract: ContractData) =>
+  contract.winner?.phone || "Chưa cập nhật";
+
+const getPropertyOwnerDisplayName = (contract: ContractData) =>
+  contract.propertyOwner?.name || "Chưa cập nhật";
+
+const getPropertyOwnerPhone = (contract: ContractData) =>
+  contract.propertyOwner?.phone || "Chưa cập nhật";
 
 const InfoBlock = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-md border bg-slate-50 p-3">

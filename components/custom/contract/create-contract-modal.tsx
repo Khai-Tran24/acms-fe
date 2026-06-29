@@ -40,6 +40,7 @@ export const CreateContractModal = ({
 
   return (
     <ContractForm
+      type="create"
       submitLabel="Tạo hợp đồng"
       isSubmitting={isSubmitting}
       onSubmit={handleCreate}

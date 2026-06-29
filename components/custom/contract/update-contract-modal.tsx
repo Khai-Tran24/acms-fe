@@ -42,6 +42,7 @@ export const UpdateContractModal = ({
 
   return (
     <ContractForm
+      type="update"
       contract={contract}
       submitLabel="Cập nhật hợp đồng"
       isSubmitting={isSubmitting}

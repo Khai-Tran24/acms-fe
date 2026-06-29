@@ -74,6 +74,22 @@ const getContractFilterOptions = async () => {
   }
 };
 
+const updateContractDiscountPrice = async (
+  id: string,
+  discountPrice: { amount?: number; times?: number },
+) => {
+  try {
+    const response = await api.patch(
+      `/contracts/${id}/discount-price`,
+      discountPrice,
+    );
+    return response.data as Response<ContractData>;
+  } catch (error) {
+    console.error("Error updating contract discount price:", error);
+    throw error;
+  }
+};
+
 export {
   getAllContracts,
   getContractById,
@@ -81,4 +97,5 @@ export {
   updateContract,
   deleteContract,
   getContractFilterOptions,
+  updateContractDiscountPrice,
 };
