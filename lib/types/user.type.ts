@@ -1,25 +1,30 @@
 import { RoleEnum } from "../enums/role.enum";
+import { Pagination } from "./reponse.type";
+
+export interface UserResponse {
+  items: UserData[];
+  pagination: Pagination;
+}
 
 export interface UserData {
   id: string;
-  email: string;
   username: string;
-  role: RoleEnum;
+  email: string;
   isActive: boolean;
-  avatar?: string;
-}
-
-export interface UserDetails extends UserData {
+  role: RoleEnum;
+  refreshToken?: string;
+  otpExpireAt: string;
+  otp: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface GetUsersQuery {
+  page?: number;
+  limit?: number;
   search?: string;
   filterByRole?: RoleEnum;
   filterByStatus?: boolean;
-  sortBy?: "username" | "email" | "createdAt";
-  sortOrder?: "asc" | "desc";
-  page?: number;
-  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
 }
