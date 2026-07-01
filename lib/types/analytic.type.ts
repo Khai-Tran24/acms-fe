@@ -1,6 +1,13 @@
+import {
+  ContractStatus,
+  PaymentStatus,
+  PropertyType,
+} from "../enums/contract.enum";
+
 export interface AnalyticsData {
   summary: SummaryData;
   chart: ChartData;
+  recentContracts: recentContractsData[];
 }
 
 export interface ChartData {
@@ -33,4 +40,13 @@ export interface SummaryData {
     activeUsers: number;
     inactiveUsers: number;
   };
+}
+
+export interface recentContractsData {
+  id: string;
+  contractNumber: string;
+  propertyName: string;
+  propertyType: PropertyType;
+  status: ContractStatus;
+  paymentStatus: PaymentStatus;
 }

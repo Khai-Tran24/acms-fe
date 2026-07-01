@@ -52,8 +52,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAllUsers } from "@/lib/api/user/user.api";
-import { UserData } from "@/lib/types/user.type";
 import { CalendarInput } from "@/components/custom/input/calendar-input";
 import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
 import {
