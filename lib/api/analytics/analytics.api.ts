@@ -2,12 +2,12 @@ import { Response } from "@/lib/types/reponse.type";
 import api from "../api";
 import { AnalyticsData } from "@/lib/types/analytic.type";
 
-interface AnalyticsParams {
-  startDate: string;
-  endDate: string;
+export interface AnalyticsParams {
+  startDate?: string;
+  endDate?: string;
 }
 
-const getAnalyticsApi = async (params: AnalyticsParams) => {
+const getAnalyticsApi = async (params: AnalyticsParams = {}) => {
   try {
     const response = await api.get("/analytics", { params });
     return response.data as Response<AnalyticsData>;
