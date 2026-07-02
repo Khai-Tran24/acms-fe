@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/table";
 import {
   deleteContract,
+  exportContractsToExcel,
   getAllContracts,
   getContractFilterOptions,
 } from "@/lib/api/contract/contract.api";
@@ -45,6 +46,7 @@ import {
   Edit,
   Ellipsis,
   Eye,
+  FileDown,
   Plus,
   RotateCcw,
   Search,
@@ -109,6 +111,7 @@ const ContractPage = () => {
   const [years, setYears] = useState<number[]>([]);
   const [pagination, setPagination] = useState<Pagination>(DEFAULT_PAGINATION);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractData | null>(
     null,
@@ -224,30 +227,75 @@ const ContractPage = () => {
     }
   };
 
+  const handleExportToExcel = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await exportContractsToExcel({
+        search: debouncedSearch || undefined,
+        filterByUserId: filterByUserId || undefined,
+        sortBy,
+        sortOrder,
+        filterByYear: year,
+        endRegisterDate: debouncedEndRegisterDate || undefined,
+        auctionDate: debouncedAuctionDate || undefined,
+      });
+
+      if (!blob.size) {
+        toast.error("Không có dữ liệu để xuất.");
+        return;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `contracts-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Xuất dữ liệu hợp đồng thành công.");
+    } catch (error) {
+      console.error("Error exporting contracts:", error);
+      toast.error("Có lỗi xảy ra khi xuất dữ liệu hợp đồng.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Quản lý hợp đồng</h1>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg">
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm hợp đồng
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Thêm hợp đồng</DialogTitle>
-              <DialogDescription>
-                Nhập thông tin để tạo hợp đồng đấu giá mới.
-              </DialogDescription>
-            </DialogHeader>
-            <CreateContractModal
-              setOpen={setCreateOpen}
-              onSuccess={fetchContracts}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button
+            variant="outline"
+            onClick={handleExportToExcel}
+            disabled={isExporting}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            {isExporting ? "Đang xuất..." : "Xuất dữ liệu"}
+          </Button>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default">
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm hợp đồng
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Thêm hợp đồng</DialogTitle>
+                <DialogDescription>
+                  Nhập thông tin để tạo hợp đồng đấu giá mới.
+                </DialogDescription>
+              </DialogHeader>
+              <CreateContractModal
+                setOpen={setCreateOpen}
+                onSuccess={fetchContracts}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <main className="mb-4 rounded-lg bg-white p-4 ring-1 ring-foreground/10">
@@ -443,7 +491,11 @@ const ContractPage = () => {
                   <TableCell className="font-medium">
                     {contract.contractNumber}
                   </TableCell>
-                  <TableCell>{contract.propertyName}</TableCell>
+                  <TableCell>
+                    {contract.propertyName.length > 50
+                      ? contract.propertyName.slice(0, 50) + "..."
+                      : contract.propertyName}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       className={getPropertyTypeClassName(
