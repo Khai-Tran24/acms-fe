@@ -26,7 +26,7 @@ export default function ProtectedRoute({
           break;
         case RoleEnum.AUCTIONEER:
         case RoleEnum.SECRETARY:
-          router.push("/contracts");
+          router.push("/dashboard");
           break;
         default:
           router.push("/sign-in");

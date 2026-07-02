@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (decoded?.role === RoleEnum.ADMIN) {
             router.push("/admin/dashboard");
           } else {
-            router.push("/contracts");
+            router.push("/dashboard");
           }
           setIsLoading(false);
         }, 1000);

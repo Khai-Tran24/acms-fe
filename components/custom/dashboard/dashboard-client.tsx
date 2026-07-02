@@ -107,6 +107,15 @@ const DashboardClient = ({
     fetchDashboardData();
   }, [endDate, startDate]);
 
+  const combineStatusCounts = (
+    statusCounts: Record<string, number>,
+    statusesToCombine: string[],
+  ) => {
+    return statusesToCombine.reduce((total, status) => {
+      return total + (statusCounts[status] || 0);
+    }, 0);
+  };
+
   const cardData = useMemo(
     () => [
       {
@@ -117,37 +126,31 @@ const DashboardClient = ({
       },
       {
         title: "Đang đấu giá",
-        value:
-          analytics.summary.contracts.contractsByStatus[
-            ContractStatus.DANG_DAU_GIA
-          ] ?? 0,
+        value: combineStatusCounts(
+          analytics.summary.contracts.contractsByStatus,
+          [ContractStatus.DANG_DAU_GIA, ContractStatus.MOI],
+        ),
         icon: <Clock className="text-amber-700" />,
         className: "bg-amber-100",
       },
       {
         title: "Hồ sơ đã hoàn thành",
-        value:
-          analytics.summary.contracts.contractsByStatus[
-            ContractStatus.DAU_GIA_THANH
-          ] ?? 0,
+        value: combineStatusCounts(
+          analytics.summary.contracts.contractsByStatus,
+          [ContractStatus.DAU_GIA_THANH, ContractStatus.DA_THANH_LY],
+        ),
         icon: <CircleCheck className="text-emerald-700" />,
         className: "bg-emerald-100",
       },
       {
-        title: "Đã thu tiền",
-        value:
-          analytics.summary.contracts.contractsByPaymentStatus[
-            PaymentStatus.DA_THU_TIEN
-          ] ?? 0,
-        icon: <CreditCard className="text-emerald-700" />,
-        className: "bg-emerald-100",
+        title: "Hồ sơ không thành",
+        value: combineStatusCounts(
+          analytics.summary.contracts.contractsByStatus,
+          [ContractStatus.DAU_GIA_KHONG_THANH, ContractStatus.TAM_DUNG],
+        ),
+        icon: <CreditCard className="text-red-700" />,
+        className: "bg-red-100",
       },
-      // {
-      //   title: "Người dùng hoạt động",
-      //   value: analytics.summary.users.activeUsers,
-      //   icon: <Users className="text-violet-700" />,
-      //   className: "bg-violet-100",
-      // },
     ],
     [analytics],
   );

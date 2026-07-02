@@ -90,6 +90,19 @@ const updateContractDiscountPrice = async (
   }
 };
 
+const exportContractsToExcel = async (query?: GetContractsQuery) => {
+  try {
+    const response = await api.get("/contracts/export/excel", {
+      params: query,
+      responseType: "blob",
+    });
+    return response.data as Blob;
+  } catch (error) {
+    console.error("Error exporting contracts to Excel:", error);
+    throw error;
+  }
+};
+
 export {
   getAllContracts,
   getContractById,
@@ -98,4 +111,5 @@ export {
   deleteContract,
   getContractFilterOptions,
   updateContractDiscountPrice,
+  exportContractsToExcel,
 };

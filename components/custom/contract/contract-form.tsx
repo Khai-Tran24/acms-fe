@@ -390,38 +390,39 @@ export const ContractForm = ({
             />
           </div>
         </section>
-
-        <section>
-          <div className="mb-2">
-            <h2 className="text-lg font-semibold">Người trúng thầu</h2>
-            <p className="text-sm text-muted-foreground">
-              Thông tin người thắng thầu của hợp đồng.
-            </p>
-          </div>
-          <Separator className="mb-4" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <TextInput
-              control={control}
-              name="winner.name"
-              label="Tên người trúng thầu"
-              placeholder="Nhập tên người trúng thầu"
-              error={errors.winner?.name?.message}
-            />
-            <TextInput
-              control={control}
-              name="winner.phone"
-              label="Số điện thoại người trúng thầu"
-              placeholder="Nhập số điện thoại"
-              error={errors.winner?.phone?.message}
-            />
-            <PriceInput
-              control={control}
-              name="winningPrice"
-              label="Giá trúng thầu"
-              error={errors.winningPrice?.message}
-            />
-          </div>
-        </section>
+        {type === "update" && (
+          <section>
+            <div className="mb-2">
+              <h2 className="text-lg font-semibold">Người trúng thầu</h2>
+              <p className="text-sm text-muted-foreground">
+                Thông tin người thắng thầu của hợp đồng.
+              </p>
+            </div>
+            <Separator className="mb-4" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <TextInput
+                control={control}
+                name="winner.name"
+                label="Tên người trúng thầu"
+                placeholder="Nhập tên người trúng thầu"
+                error={errors.winner?.name?.message}
+              />
+              <TextInput
+                control={control}
+                name="winner.phone"
+                label="Số điện thoại người trúng thầu"
+                placeholder="Nhập số điện thoại"
+                error={errors.winner?.phone?.message}
+              />
+              <PriceInput
+                control={control}
+                name="winningPrice"
+                label="Giá trúng thầu"
+                error={errors.winningPrice?.message}
+              />
+            </div>
+          </section>
+        )}
       </FieldSet>
 
       <div className="flex justify-end border-t pt-4">
