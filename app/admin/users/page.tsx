@@ -34,16 +34,16 @@ import {
 } from "@/components/ui/table";
 import { getAllUsers } from "@/lib/api/user/user.api";
 import { RoleEnum } from "@/lib/enums/role.enum";
-import { PaginationInfo } from "@/lib/types/reponse.type";
 import { GetUsersQuery, UserData } from "@/lib/types/user.type";
-import { Edit, Eye, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Edit, Eye, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ViewDetailModal } from "./_components/view-detail-modal";
 import { UpdateUserModal } from "./_components/update-user-modal";
 import { DeleteUserModal } from "./_components/delete-user-modal";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { Pagination } from "@/lib/types/reponse.type";
 
-const DEFAULT_PAGINATION: PaginationInfo = {
+const DEFAULT_PAGINATION: Pagination = {
   page: 1,
   limit: 10,
   totalPages: 1,
@@ -52,8 +52,7 @@ const DEFAULT_PAGINATION: PaginationInfo = {
 
 const UserPage = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
-  const [pagination, setPagination] =
-    useState<PaginationInfo>(DEFAULT_PAGINATION);
+  const [pagination, setPagination] = useState<Pagination>(DEFAULT_PAGINATION);
   const [page, setPage] = useState(DEFAULT_PAGINATION.page);
   const [limit, setLimit] = useState(DEFAULT_PAGINATION.limit);
   const [search, setSearch] = useState("");
@@ -65,7 +64,6 @@ const UserPage = () => {
   const [sortOrder, setSortOrder] = useState<GetUsersQuery["sortOrder"]>();
   const [, setCloseUpdateModal] = useState(false);
   const [, setCloseDeleteModal] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -81,8 +79,8 @@ const UserPage = () => {
           sortBy,
           sortOrder,
         });
-        setUserData(response.data);
-        setPagination(response.pagination);
+        setUserData(response.data.items);
+        setPagination(response.data.pagination);
       } catch (error) {
         console.error("Error fetching user data:", error);
       }

@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUserDetails } from "@/lib/api/user/user.api";
 import { RoleEnum } from "@/lib/enums/role.enum";
-import { UserData, UserDetails } from "@/lib/types/user.type";
+import { UserData } from "@/lib/types/user.type";
 import { useEffect, useState } from "react";
 
 export const ViewDetailModal = ({ user }: { user: UserData }) => {
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [userDetails, setUserDetails] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

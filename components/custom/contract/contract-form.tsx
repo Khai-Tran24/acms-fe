@@ -9,98 +9,79 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { getAllUsers } from "@/lib/api/user/user.api";
-import { ContractStatusEnum } from "@/lib/enums/contract.enum";
-import { RoleEnum } from "@/lib/enums/role.enum";
 import { ContractData, ContractPayload } from "@/lib/types/contract.type";
-import { UserData } from "@/lib/types/user.type";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
-import { CONTRACT_STATUS_LABELS, getContractDefaults } from "./contract-utils";
+import {
+  CONTRACT_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  PROPERTY_TYPE_LABELS,
+  getContractDefaults,
+} from "./contract-utils";
 import { TextInput } from "@/components/custom/input/text-input";
 import { PriceInput } from "@/components/custom/input/price-input";
 import { CalendarInput } from "@/components/custom/input/calendar-input";
 import { Separator } from "@/components/ui/separator";
+import {
+  ContractStatus,
+  PaymentStatus,
+  PropertyType,
+} from "@/lib/enums/contract.enum";
+import { useEffect, useState } from "react";
+import { getContractFilterOptions } from "@/lib/api/contract/contract.api";
+import { RoleEnum } from "@/lib/enums/role.enum";
 
-interface ContractFormValues {
-  regulationNumber: string;
-  title: string;
-  description: string;
-  startingPrice: number;
-  applicationFee: number;
-  deposit: number;
-  registerStartDate: string;
-  registerExpiredDate: string;
-  auctionDate: string;
-  auctionTime: number;
-  status: ContractStatusEnum;
-  fileUrl: string;
-  auctioneer: string;
-  secretary: string;
-}
-
-const contractSchema: yup.ObjectSchema<ContractFormValues> = yup.object({
-  regulationNumber: yup.string().trim().required("Số quy chế là bắt buộc"),
-  title: yup.string().trim().required("Tên hợp đồng là bắt buộc"),
-  description: yup.string().trim().defined(),
+const contractSchema: yup.ObjectSchema<ContractPayload> = yup.object({
+  contractNumber: yup.string().trim().required("Số hợp đồng là bắt buộc"),
+  contractYear: yup
+    .number()
+    .typeError("Năm hợp đồng phải là một số")
+    .required("Năm hợp đồng là bắt buộc"),
+  propertyName: yup.string().trim().required("Tên tài sản là bắt buộc"),
+  propertyType: yup
+    .mixed<PropertyType>()
+    .oneOf(Object.values(PropertyType) as PropertyType[])
+    .required("Loại tài sản là bắt buộc"),
+  propertyOwner: yup
+    .object({
+      name: yup.string().trim().required("Tên chủ sở hữu là bắt buộc"),
+      phone: yup
+        .string()
+        .trim()
+        .required("Số điện thoại chủ sở hữu là bắt buộc"),
+    })
+    .required(),
+  caseOfficer: yup.string().trim().required("Cán bộ phụ trách là bắt buộc"),
   startingPrice: yup
     .number()
-    .typeError("Giá khởi điểm không hợp lệ")
-    .moreThan(yup.ref("deposit"), "Giá khởi điểm phải lớn hơn tiền đặt cọc")
-
+    .typeError("Giá khởi điểm phải là một số")
     .required("Giá khởi điểm là bắt buộc"),
-  applicationFee: yup
+  winningPrice: yup
     .number()
-    .typeError("Phí hồ sơ không hợp lệ")
-    .min(0, "Phí hồ sơ không được âm")
-
-    .required("Phí hồ sơ là bắt buộc"),
-  deposit: yup
-    .number()
-    .typeError("Tiền đặt cọc không hợp lệ")
-    .min(0, "Tiền đặt cọc không được âm")
-
-    .required("Tiền đặt cọc là bắt buộc"),
-  registerStartDate: yup.string().required("Ngày bắt đầu đăng ký là bắt buộc"),
-  registerExpiredDate: yup
-    .string()
-    .required("Ngày hết hạn đăng ký là bắt buộc")
-    .test(
-      "after-register-start",
-      "Ngày hết hạn phải sau ngày bắt đầu",
-      function (value) {
-        return !value || value > this.parent.registerStartDate;
-      },
-    ),
-  auctionDate: yup
-    .string()
-    .required("Ngày đấu giá là bắt buộc")
-    .test(
-      "after-register-expired",
-      "Ngày đấu giá phải sau ngày hết hạn đăng ký",
-      function (value) {
-        return !value || value > this.parent.registerExpiredDate;
-      },
-    ),
-  auctionTime: yup
-    .number()
-    .typeError("Thời lượng đấu giá không hợp lệ")
-    .min(0, "Thời lượng đấu giá không được âm")
-
-    .required("Thời lượng đấu giá là bắt buộc"),
+    .typeError("Giá trúng thầu phải là một số")
+    .nullable()
+    .optional(),
+  endRegisterDate: yup.string().required("Ngày kết thúc đăng ký là bắt buộc"),
+  auctionDate: yup.string().required("Ngày đấu giá là bắt buộc"),
   status: yup
-    .mixed<ContractStatusEnum>()
-    .oneOf(Object.values(ContractStatusEnum))
+    .mixed<ContractStatus>()
+    .oneOf(Object.values(ContractStatus) as ContractStatus[])
     .required("Trạng thái là bắt buộc"),
-  fileUrl: yup.string().trim().defined(),
-  auctioneer: yup.string().required("Đấu giá viên là bắt buộc"),
-  secretary: yup.string().required("Thư ký là bắt buộc"),
+  winner: yup
+    .object({
+      name: yup.string().trim().optional(),
+      phone: yup.string().trim().optional(),
+    })
+    .optional(),
+  paymentStatus: yup
+    .mixed<PaymentStatus>()
+    .oneOf(Object.values(PaymentStatus) as PaymentStatus[])
+    .required("Trạng thái thanh toán là bắt buộc"),
 });
 
 interface ContractFormProps {
+  type: "create" | "update";
   contract?: ContractData;
   submitLabel: string;
   isSubmitting?: boolean;
@@ -108,90 +89,262 @@ interface ContractFormProps {
 }
 
 export const ContractForm = ({
+  type,
   contract,
   submitLabel,
   isSubmitting = false,
   onSubmit,
 }: ContractFormProps) => {
-  const [auctioneers, setAuctioneers] = useState<UserData[]>([]);
-  const [secretaries, setSecretaries] = useState<UserData[]>([]);
+  const contractDefaultsInput: ContractPayload | undefined = contract
+    ? ({
+        ...contract,
+        caseOfficer:
+          typeof contract.caseOfficer === "string"
+            ? contract.caseOfficer
+            : (contract.caseOfficer?.id ?? ""),
+      } as ContractPayload)
+    : undefined;
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<ContractFormValues>({
+  } = useForm<ContractPayload>({
     resolver: yupResolver(contractSchema),
-    defaultValues: getContractDefaults(contract),
+    defaultValues: getContractDefaults(contractDefaultsInput),
   });
 
+  const [userOptions, setUserOptions] = useState<
+    { id: string; username: string; role: RoleEnum }[]
+  >([]);
+
+  const handleContractFilterOptions = async () => {
+    const response = await getContractFilterOptions();
+    if (response.success) {
+      setUserOptions(response.data.caseOfficers);
+    } else {
+      console.error(
+        "Failed to fetch contract filter options:",
+        response.message,
+      );
+    }
+  };
+
   useEffect(() => {
-    const fetchAssignableUsers = async () => {
-      try {
-        const [auctioneerResponse, secretaryResponse] = await Promise.all([
-          getAllUsers({ filterByRole: RoleEnum.AUCTIONEER, limit: 100 }),
-          getAllUsers({ filterByRole: RoleEnum.SECRETARY, limit: 100 }),
-        ]);
-        setAuctioneers(auctioneerResponse.data);
-        setSecretaries(secretaryResponse.data);
-      } catch (error) {
-        console.error("Error fetching assignable users:", error);
-      }
+    const fetchCaseOfficers = async () => {
+      await handleContractFilterOptions();
     };
 
-    fetchAssignableUsers();
-  }, []);
+    fetchCaseOfficers();
+  }, [contract, control]);
 
-  const submitForm = async (values: ContractFormValues) => {
-    await onSubmit({
-      regulationNumber: values.regulationNumber.trim(),
-      title: values.title.trim(),
-      description: values.description.trim(),
-      startingPrice: Number(values.startingPrice),
-      applicationFee: Number(values.applicationFee),
-      deposit: Number(values.deposit),
-      registerStartDate: values.registerStartDate,
-      registerExpiredDate: values.registerExpiredDate,
-      auctionDate: values.auctionDate,
-      auctionTime: Number(values.auctionTime),
-      status: values.status,
-      fileUrl: values.fileUrl?.trim() || "",
-      auctioneer: values.auctioneer,
-      secretary: values.secretary,
-    });
+  const submitForm = async (values: ContractPayload) => {
+    await onSubmit(values);
   };
 
   return (
-    <form onSubmit={handleSubmit(submitForm)} className="space-y-5 py-2">
+    <form onSubmit={handleSubmit(submitForm)} className="space-y-6 py-2">
       <FieldSet className="space-y-2">
-        <div>
-          <h2 className="mb-2 text-lg font-semibold">Thông tin hợp đồng</h2>
-          <Separator className="mb-2" />
+        <section>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold">Thông tin chung</h2>
+            <p className="text-sm text-muted-foreground">
+              Mã hợp đồng, năm và thông tin tài sản.
+            </p>
+          </div>
+          <Separator className="mb-4" />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <TextInput
               control={control}
-              name="regulationNumber"
-              label="Số quy chế"
-              error={errors.regulationNumber?.message}
+              name="contractNumber"
+              label="Số hợp đồng"
+              placeholder="Nhập số hợp đồng"
+              error={errors.contractNumber?.message}
             />
             <TextInput
               control={control}
-              name="title"
-              label="Tên hợp đồng"
-              error={errors.title?.message}
+              name="contractYear"
+              label="Năm hợp đồng"
+              placeholder="Ví dụ: 2026"
+              type="number"
+              error={errors.contractYear?.message}
             />
+            <TextInput
+              control={control}
+              name="propertyName"
+              label="Tên tài sản"
+              placeholder="Nhập tên tài sản"
+              error={errors.propertyName?.message}
+            />
+            <Controller
+              name="propertyType"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Loại tài sản</FieldLabel>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn loại tài sản" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(PropertyType).map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {PROPERTY_TYPE_LABELS[type]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.propertyType?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.propertyType.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+            <PriceInput
+              control={control}
+              name="startingPrice"
+              label="Giá khởi điểm"
+              error={errors.startingPrice?.message}
+            />
+            <Controller
+              control={control}
+              name="caseOfficer"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Cán bộ phụ trách</FieldLabel>
+                  <Select
+                    value={field.value?.toString() ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn cán bộ phụ trách" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userOptions.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.username}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.caseOfficer?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.caseOfficer.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold">Thông tin chủ sở hữu</h2>
+            <p className="text-sm text-muted-foreground">
+              Thông tin liên hệ của chủ sở hữu.
+            </p>
+          </div>
+          <Separator className="mb-4" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <TextInput
+              control={control}
+              name="propertyOwner.name"
+              label="Tên chủ sở hữu"
+              placeholder="Nhập tên chủ sở hữu"
+              error={errors.propertyOwner?.name?.message}
+            />
+            <TextInput
+              control={control}
+              name="propertyOwner.phone"
+              label="Số điện thoại chủ sở hữu"
+              placeholder="Nhập số điện thoại"
+              error={errors.propertyOwner?.phone?.message}
+            />
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold">Lịch trình</h2>
+            <p className="text-sm text-muted-foreground">
+              Chọn thời điểm kết thúc đăng ký và ngày đấu giá.
+            </p>
+          </div>
+          <Separator className="mb-4" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Controller
+              name="endRegisterDate"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Ngày kết thúc đăng ký</FieldLabel>
+                  <CalendarInput
+                    enableTime={true}
+                    date={field.value as string}
+                    onDateChange={field.onChange}
+                    placeholder="Chọn ngày kết thúc"
+                  />
+                  {errors.endRegisterDate?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.endRegisterDate.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="auctionDate"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Ngày đấu giá</FieldLabel>
+                  <CalendarInput
+                    enableTime={true}
+                    date={field.value as string}
+                    onDateChange={field.onChange}
+                    placeholder="Chọn ngày đấu giá"
+                  />
+                  {errors.auctionDate?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.auctionDate.message}
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold">Trạng thái</h2>
+            <p className="text-sm text-muted-foreground">
+              Chọn trạng thái xử lý và trạng thái thanh toán.
+            </p>
+          </div>
+          <Separator className="mb-4" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Controller
               name="status"
               control={control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel>Trạng thái</FieldLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <FieldLabel>Trạng thái hợp đồng</FieldLabel>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Chọn trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.values(ContractStatusEnum).map((status) => (
+                      {Object.values(ContractStatus).map((status) => (
                         <SelectItem key={status} value={status}>
                           {CONTRACT_STATUS_LABELS[status]}
                         </SelectItem>
@@ -206,205 +359,70 @@ export const ContractForm = ({
                 </Field>
               )}
             />
-          </div>
-        </div>
-        <div>
-          <h2 className="mb-2 text-lg font-semibold">Chi tiết đấu giá</h2>
-          <Separator className="mb-2" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <PriceInput
-              control={control}
-              name="applicationFee"
-              label="Phí hồ sơ"
-              error={errors.applicationFee?.message}
-            />
-            <PriceInput
-              control={control}
-              name="deposit"
-              label="Tiền đặt cọc"
-              error={errors.deposit?.message}
-            />
-            <PriceInput
-              control={control}
-              name="startingPrice"
-              label="Giá khởi điểm"
-              error={errors.startingPrice?.message}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-2 text-lg font-semibold">Lịch trình</h2>
-          <Separator className="mb-2" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Controller
-              name="registerStartDate"
+              name="paymentStatus"
               control={control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel>Ngày bắt đầu đăng ký</FieldLabel>
-                  <CalendarInput
-                    date={field.value}
-                    onDateChange={field.onChange}
-                    placeholder="Chọn ngày bắt đầu"
-                    enableTime={true}
-                  />
-                  {errors.registerStartDate?.message && (
-                    <p className="text-sm text-red-500">
-                      {errors.registerStartDate.message}
-                    </p>
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name="registerExpiredDate"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Ngày hết hạn đăng ký</FieldLabel>
-                  <CalendarInput
-                    date={field.value}
-                    onDateChange={field.onChange}
-                    placeholder="Chọn ngày hết hạn"
-                    enableTime={true}
-                  />
-                  {errors.registerExpiredDate?.message && (
-                    <p className="text-sm text-red-500">
-                      {errors.registerExpiredDate.message}
-                    </p>
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name="auctionDate"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Ngày đấu giá</FieldLabel>
-                  <CalendarInput
-                    date={field.value}
-                    onDateChange={field.onChange}
-                    placeholder="Chọn ngày đấu giá"
-                    enableTime={true}
-                  />
-                  {errors.auctionDate?.message && (
-                    <p className="text-sm text-red-500">
-                      {errors.auctionDate.message}
-                    </p>
-                  )}
-                </Field>
-              )}
-            />
-            <TextInput
-              control={control}
-              name="auctionTime"
-              label="Thời lượng đấu giá"
-              type="number"
-              error={errors.auctionTime?.message}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-2 text-lg font-semibold">Nhân sự</h2>
-          <Separator className="mb-2" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Controller
-              name="auctioneer"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Đấu giá viên</FieldLabel>
+                  <FieldLabel>Trạng thái thanh toán</FieldLabel>
                   <Select
-                    value={field.value.toString()}
+                    value={field.value ?? ""}
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn đấu giá viên" />
+                      <SelectValue placeholder="Chọn trạng thái thanh toán" />
                     </SelectTrigger>
                     <SelectContent>
-                      {auctioneers.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.username} - {user.email}
+                      {Object.values(PaymentStatus).map((paymentStatus) => (
+                        <SelectItem key={paymentStatus} value={paymentStatus}>
+                          {PAYMENT_STATUS_LABELS[paymentStatus]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.auctioneer?.message && (
+                  {errors.paymentStatus?.message && (
                     <p className="text-sm text-red-500">
-                      {errors.auctioneer.message}
-                    </p>
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name="secretary"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Thư ký</FieldLabel>
-                  <Select
-                    value={field.value.toString()}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn thư ký" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {secretaries.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.username} - {user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.secretary?.message && (
-                    <p className="text-sm text-red-500">
-                      {errors.secretary.message}
+                      {errors.paymentStatus.message}
                     </p>
                   )}
                 </Field>
               )}
             />
           </div>
-        </div>
-        <div>
-          <h2 className="mb-2 text-lg font-semibold">Tài liệu</h2>
-          <Separator className="mb-2" />
-          <div>
-            <TextInput
-              control={control}
-              name="fileUrl"
-              label="Link tài liệu"
-              className="md:col-span-2"
-              error={errors.fileUrl?.message}
-              disabled={true}
-            />
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <Field className="md:col-span-2">
-                  <FieldLabel>Mô tả</FieldLabel>
-                  <Textarea
-                    {...field}
-                    rows={4}
-                    placeholder="Nhập mô tả hợp đồng"
-                    disabled={true}
-                  />
-                  {errors.description?.message && (
-                    <p className="text-sm text-red-500">
-                      {errors.description.message}
-                    </p>
-                  )}
-                </Field>
-              )}
-            />
-          </div>
-        </div>
+        </section>
+        {type === "update" && (
+          <section>
+            <div className="mb-2">
+              <h2 className="text-lg font-semibold">Người trúng thầu</h2>
+              <p className="text-sm text-muted-foreground">
+                Thông tin người thắng thầu của hợp đồng.
+              </p>
+            </div>
+            <Separator className="mb-4" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <TextInput
+                control={control}
+                name="winner.name"
+                label="Tên người trúng thầu"
+                placeholder="Nhập tên người trúng thầu"
+                error={errors.winner?.name?.message}
+              />
+              <TextInput
+                control={control}
+                name="winner.phone"
+                label="Số điện thoại người trúng thầu"
+                placeholder="Nhập số điện thoại"
+                error={errors.winner?.phone?.message}
+              />
+              <PriceInput
+                control={control}
+                name="winningPrice"
+                label="Giá trúng thầu"
+                error={errors.winningPrice?.message}
+              />
+            </div>
+          </section>
+        )}
       </FieldSet>
 
       <div className="flex justify-end border-t pt-4">

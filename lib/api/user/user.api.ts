@@ -1,11 +1,11 @@
-import { PaginatedResponse, Response } from "@/lib/types/reponse.type";
-import { GetUsersQuery, UserData, UserDetails } from "@/lib/types/user.type";
+import { Response } from "@/lib/types/reponse.type";
+import { GetUsersQuery, UserData, UserResponse } from "@/lib/types/user.type";
 import api from "../api";
 
 const getAllUsers = async (query?: GetUsersQuery) => {
   try {
     const response = await api.get("/users", { params: query });
-    return response.data as PaginatedResponse<UserData[]>;
+    return response.data as Response<UserResponse>;
   } catch (error) {
     console.error("Error fetching users:", error);
     throw error;
@@ -15,7 +15,7 @@ const getAllUsers = async (query?: GetUsersQuery) => {
 const getUserDetails = async (userId: string) => {
   try {
     const response = await api.get(`/users/${userId}`);
-    return response.data as Response<UserDetails>;
+    return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error fetching user:", error);
     throw error;

@@ -35,16 +35,18 @@ import {
 } from "@/components/ui/table";
 import {
   deleteContract,
+  exportContractsToExcel,
   getAllContracts,
+  getContractFilterOptions,
 } from "@/lib/api/contract/contract.api";
 import { useToast } from "@/lib/hooks/use-toast";
 import { ContractData, GetContractsQuery } from "@/lib/types/contract.type";
-import { PaginationInfo } from "@/lib/types/reponse.type";
+import { Pagination } from "@/lib/types/reponse.type";
 import {
-  Download,
   Edit,
   Ellipsis,
   Eye,
+  FileDown,
   Plus,
   RotateCcw,
   Search,
@@ -52,8 +54,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAllUsers } from "@/lib/api/user/user.api";
-import { UserData } from "@/lib/types/user.type";
 import { CalendarInput } from "@/components/custom/input/calendar-input";
 import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
 import {
@@ -66,13 +66,18 @@ import {
 import { UpdateContractModal } from "@/components/custom/contract/update-contract-modal";
 import {
   CONTRACT_STATUS_LABELS,
+  getPaymentStatusClassName,
+  getPropertyTypeClassName,
   getStatusClassName,
+  PAYMENT_STATUS_LABELS,
+  PROPERTY_TYPE_LABELS,
 } from "@/components/custom/contract/contract-utils";
 import { CreateContractModal } from "@/components/custom/contract/create-contract-modal";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { formatDate } from "date-fns";
+import { RoleEnum } from "@/lib/enums/role.enum";
 
-const DEFAULT_PAGINATION: PaginationInfo = {
+const DEFAULT_PAGINATION: Pagination = {
   page: 1,
   limit: 10,
   totalPages: 1,
@@ -90,23 +95,29 @@ const ContractPage = () => {
   const [sortOrder, setSortOrder] = useState<GetContractsQuery["sortOrder"]>();
   const [filterByUserId, setFilterByUserId] =
     useState<GetContractsQuery["filterByUserId"]>();
-  const [startRegisterDate, setStartRegisterDate] = useState<string>("");
+  const [year, setYear] = useState<number>();
   const [endRegisterDate, setEndRegisterDate] = useState<string>("");
   const [auctionDate, setAuctionDate] = useState<string>("");
   const [contractData, setContractData] = useState<ContractData[]>([]);
-  const [auctioneers, setAuctioneers] = useState<UserData[]>([]);
-  const [secretaries, setSecretaries] = useState<UserData[]>([]);
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [pagination, setPagination] =
-    useState<PaginationInfo>(DEFAULT_PAGINATION);
+  const [auctioneers, setAuctioneers] = useState<
+    { id: string; username: string; role: RoleEnum }[]
+  >([]);
+  const [secretaries, setSecretaries] = useState<
+    { id: string; username: string; role: RoleEnum }[]
+  >([]);
+  const [users, setUsers] = useState<
+    { id: string; username: string; role: RoleEnum }[]
+  >([]);
+  const [years, setYears] = useState<number[]>([]);
+  const [pagination, setPagination] = useState<Pagination>(DEFAULT_PAGINATION);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractData | null>(
     null,
   );
 
   const debouncedSearch = useDebounce(search, 500);
-  const debouncedStartRegisterDate = useDebounce(startRegisterDate, 500);
   const debouncedEndRegisterDate = useDebounce(endRegisterDate, 500);
   const debouncedAuctionDate = useDebounce(auctionDate, 500);
 
@@ -124,12 +135,12 @@ const ContractPage = () => {
         filterByUserId: filterByUserId || undefined,
         sortBy,
         sortOrder,
-        startRegisterDate: debouncedStartRegisterDate || undefined,
+        filterByYear: year,
         endRegisterDate: debouncedEndRegisterDate || undefined,
         auctionDate: debouncedAuctionDate || undefined,
-      });
-      setContractData(response.data);
-      setPagination(response.pagination ?? DEFAULT_PAGINATION);
+      } as GetContractsQuery);
+      setContractData(response.data.items ?? []);
+      setPagination(response.data.pagination ?? DEFAULT_PAGINATION);
     } catch (error) {
       console.error("Error fetching contract data:", error);
       toastRef.current.error("Có lỗi xảy ra khi tải danh sách hợp đồng.");
@@ -143,12 +154,14 @@ const ContractPage = () => {
     debouncedSearch,
     sortBy,
     sortOrder,
-    debouncedStartRegisterDate,
     debouncedEndRegisterDate,
     debouncedAuctionDate,
+    year,
   ]);
 
-  const seperateUsersByRole = (users: UserData[]) => {
+  const seperateUsersByRole = (
+    users: { id: string; username: string; role: RoleEnum }[],
+  ) => {
     const auctioneers = users.filter((user) => user.role === "AUCTIONEER");
     const secretaries = users.filter((user) => user.role === "SECRETARY");
     const otherUsers = users.filter(
@@ -157,11 +170,13 @@ const ContractPage = () => {
     return { auctioneers, secretaries, otherUsers };
   };
 
-  const fetchUsers = useCallback(async () => {
+  const fetchFilterOptions = useCallback(async () => {
     try {
-      const response = await getAllUsers({ limit: 1000 });
+      const response = await getContractFilterOptions();
+      setYears(response.data.years ?? []);
+
       const { auctioneers, secretaries, otherUsers } = seperateUsersByRole(
-        response.data,
+        response.data.caseOfficers ?? [],
       );
       setAuctioneers(auctioneers);
       setSecretaries(secretaries);
@@ -175,10 +190,10 @@ const ContractPage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchContracts(), fetchUsers()]);
+      await Promise.all([fetchContracts(), fetchFilterOptions()]);
     };
     loadData();
-  }, [fetchContracts, fetchUsers]);
+  }, [fetchContracts, fetchFilterOptions]);
 
   const handlePageSizeChange = (pageSize: number) => {
     setLimit(pageSize);
@@ -187,18 +202,18 @@ const ContractPage = () => {
 
   const resetFilters = () => {
     setSearch("");
-    setStartRegisterDate("");
     setEndRegisterDate("");
     setAuctionDate("");
     setFilterByUserId(undefined);
     setSortBy(undefined);
     setSortOrder(undefined);
     setPage(1);
+    setYear(undefined);
   };
 
   const handleDelete = async (contract: ContractData) => {
     const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn xóa hợp đồng "${contract.title}" không?`,
+      `Bạn có chắc chắn muốn xóa hợp đồng "${contract.propertyName}" không?`,
     );
     if (!confirmed) return;
 
@@ -212,30 +227,75 @@ const ContractPage = () => {
     }
   };
 
+  const handleExportToExcel = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await exportContractsToExcel({
+        search: debouncedSearch || undefined,
+        filterByUserId: filterByUserId || undefined,
+        sortBy,
+        sortOrder,
+        filterByYear: year,
+        endRegisterDate: debouncedEndRegisterDate || undefined,
+        auctionDate: debouncedAuctionDate || undefined,
+      });
+
+      if (!blob.size) {
+        toast.error("Không có dữ liệu để xuất.");
+        return;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `contracts-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Xuất dữ liệu hợp đồng thành công.");
+    } catch (error) {
+      console.error("Error exporting contracts:", error);
+      toast.error("Có lỗi xảy ra khi xuất dữ liệu hợp đồng.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Quản lý hợp đồng</h1>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg">
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm hợp đồng
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Thêm hợp đồng</DialogTitle>
-              <DialogDescription>
-                Nhập thông tin để tạo hợp đồng đấu giá mới.
-              </DialogDescription>
-            </DialogHeader>
-            <CreateContractModal
-              setOpen={setCreateOpen}
-              onSuccess={fetchContracts}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button
+            variant="outline"
+            onClick={handleExportToExcel}
+            disabled={isExporting}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            {isExporting ? "Đang xuất..." : "Xuất dữ liệu"}
+          </Button>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default">
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm hợp đồng
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Thêm hợp đồng</DialogTitle>
+                <DialogDescription>
+                  Nhập thông tin để tạo hợp đồng đấu giá mới.
+                </DialogDescription>
+              </DialogHeader>
+              <CreateContractModal
+                setOpen={setCreateOpen}
+                onSuccess={fetchContracts}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <main className="mb-4 rounded-lg bg-white p-4 ring-1 ring-foreground/10">
@@ -275,7 +335,7 @@ const ContractPage = () => {
                     <SelectLabel>Đấu giá viên</SelectLabel>
                     {auctioneers.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.username} ({user.email})
+                        {user.username}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -283,7 +343,7 @@ const ContractPage = () => {
                     <SelectLabel>Thư ký</SelectLabel>
                     {secretaries.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.username} ({user.email})
+                        {user.username}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -291,7 +351,7 @@ const ContractPage = () => {
                     <SelectLabel>Người dùng khác</SelectLabel>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.username} ({user.email})
+                        {user.username}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -358,14 +418,27 @@ const ContractPage = () => {
           </div>
         </div>
         <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <CalendarInput
-            placeholder="Ngày bắt đầu đăng ký"
-            date={startRegisterDate}
-            onDateChange={(date) => {
-              setStartRegisterDate(date);
+          <Select
+            value={year?.toString() ?? "all"}
+            onValueChange={(value) => {
+              setYear(value === "all" ? undefined : parseInt(value, 10));
               setPage(1);
             }}
-          />
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Năm" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="all">Tất cả năm</SelectItem>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           <CalendarInput
             placeholder="Ngày kết thúc đăng ký"
             date={endRegisterDate}
@@ -387,26 +460,27 @@ const ContractPage = () => {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Tên</TableHead>
-              <TableHead>Số quy chế</TableHead>
+              <TableHead>Số hợp đồng</TableHead>
+              <TableHead>Tên tài sản</TableHead>
+              <TableHead>Loại tài sản</TableHead>
               <TableHead>Giá khởi điểm</TableHead>
-              <TableHead>Tạo bởi</TableHead>
-              <TableHead>Thời gian đăng ký</TableHead>
-              <TableHead>Thời gian đấu giá</TableHead>
-              <TableHead>Trạng thái</TableHead>
+              <TableHead>Ngày kết thúc đăng ký</TableHead>
+              <TableHead>Ngày đấu giá</TableHead>
+              <TableHead>Trạng thái hồ sơ</TableHead>
+              <TableHead>Trạng thái thanh toán</TableHead>
               <TableHead>Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center">
+                <TableCell colSpan={13} className="py-8 text-center">
                   Đang tải danh sách hợp đồng...
                 </TableCell>
               </TableRow>
             ) : contractData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center">
+                <TableCell colSpan={13} className="py-8 text-center">
                   Chưa có hợp đồng phù hợp.
                 </TableCell>
               </TableRow>
@@ -415,45 +489,47 @@ const ContractPage = () => {
                 <TableRow key={contract.id}>
                   <TableCell>{contract.id}</TableCell>
                   <TableCell className="font-medium">
-                    {contract.title}
+                    {contract.contractNumber}
                   </TableCell>
-                  <TableCell>{contract.regulationNumber}</TableCell>
+                  <TableCell>
+                    {contract.propertyName.length > 50
+                      ? contract.propertyName.slice(0, 50) + "..."
+                      : contract.propertyName}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={getPropertyTypeClassName(
+                        contract.propertyType,
+                      )}
+                    >
+                      {PROPERTY_TYPE_LABELS[contract.propertyType]}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     {formatCurrency(contract.startingPrice)}
                   </TableCell>
                   <TableCell>
-                    {contract.createdBy?.username}
-                    {contract.createdBy?.email && (
-                      <span className="ml-1 text-sm text-gray-500">
-                        ({contract.createdBy.email})
-                      </span>
-                    )}
+                    {formatDate(contract.endRegisterDate, "HH:mm dd-MM-yyyy")}
                   </TableCell>
                   <TableCell>
-                    {formatDate(contract.registerStartDate, "HH:mm dd-MM-yyyy")}{" "}
-                    -{" "}
-                    {formatDate(
-                      contract.registerExpiredDate,
-                      "HH:mm dd-MM-yyyy",
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(contract.auctionDate, "HH:mm dd-MM-yyyy")} -{" "}
-                    {formatDate(
-                      String(
-                        new Date(
-                          new Date(contract.auctionDate).getTime() +
-                            contract.auctionTime * 60000,
-                        ),
-                      ),
-                      "HH:mm dd-MM-yyyy",
-                    )}
+                    {formatDate(contract.auctionDate, "HH:mm dd-MM-yyyy")}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge className={getStatusClassName(contract.status)}>
                       {CONTRACT_STATUS_LABELS[contract.status]}
                     </Badge>
                   </TableCell>
+
+                  <TableCell className="text-center">
+                    <Badge
+                      className={getPaymentStatusClassName(
+                        contract.paymentStatus,
+                      )}
+                    >
+                      {PAYMENT_STATUS_LABELS[contract.paymentStatus]}
+                    </Badge>
+                  </TableCell>
+
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

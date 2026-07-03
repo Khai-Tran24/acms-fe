@@ -22,7 +22,7 @@ export const CreateContractModal = ({
     setIsSubmitting(true);
     try {
       const response = await createContract(payload);
-      if (response.status === "success") {
+      if (response.success === true) {
         toast.success("Hợp đồng đã được tạo thành công.");
         setOpen(false);
         onSuccess();
@@ -40,6 +40,7 @@ export const CreateContractModal = ({
 
   return (
     <ContractForm
+      type="create"
       submitLabel="Tạo hợp đồng"
       isSubmitting={isSubmitting}
       onSubmit={handleCreate}

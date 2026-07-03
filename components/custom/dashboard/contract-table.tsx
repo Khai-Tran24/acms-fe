@@ -7,90 +7,82 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate } from "date-fns";
 import {
   CONTRACT_STATUS_LABELS,
+  getPaymentStatusClassName,
+  getPropertyTypeClassName,
   getStatusClassName,
+  PAYMENT_STATUS_LABELS,
+  PROPERTY_TYPE_LABELS,
 } from "../contract/contract-utils";
-import { ContractStatusEnum } from "@/lib/enums/contract.enum";
+import { recentContractsData } from "@/lib/types/analytic.type";
 
-const mockData = [
-  {
-    id: "1",
-    regulationNumber: "1234",
-    title: "Demo 2",
-    description: "",
-    startingPrice: 2000000000,
-    applicationFee: 100000,
-    deposit: 500000000,
-    registerStartDate: "2026-06-09T17:00:00.000Z",
-    registerExpiredDate: "2026-06-15T17:00:00.000Z",
-    auctionDate: "2026-06-25T17:00:00.000Z",
-    auctionTime: 90,
-    status: ContractStatusEnum.DANG_THUC_HIEN,
-  },
-  {
-    id: "2",
-    regulationNumber: "123",
-    title: "Demo Contract 1 updated",
-    description:
-      "This is my very first demo for contract flow, i just write something to test UI",
-    startingPrice: 1000000000,
-    applicationFee: 100000,
-    deposit: 200000000,
-    registerStartDate: "2026-06-06T17:00:00.000Z",
-    registerExpiredDate: "2026-06-09T17:00:00.000Z",
-    auctionDate: "2026-10-24T17:00:00.000Z",
-    auctionTime: 30,
-    status: ContractStatusEnum.MOI,
-  },
-];
-export const ContractTable = () => {
+export const ContractTable = ({
+  contracts,
+  isLoading = false,
+}: {
+  contracts: recentContractsData[];
+  isLoading?: boolean;
+}) => {
   return (
     <div className="rounded-lg bg-white p-4 ring-1 ring-foreground/10">
+      <p className="mb-2 text-lg font-bold">Hồ sơ gần đây</p>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
-            <TableHead>Số quy chế</TableHead>
-            <TableHead>Tiêu đề</TableHead>
-            <TableHead>Giá khởi điểm</TableHead>
-            <TableHead>Thời gian đăng ký</TableHead>
-            <TableHead>Thời gian đấu giá</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            <TableHead>Số hợp đồng</TableHead>
+            <TableHead>Tên tài sản</TableHead>
+            <TableHead>Loại tài sản</TableHead>
+            <TableHead>Trạng thái hồ sơ</TableHead>
+            <TableHead>Trạng thái thanh toán</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockData.map((contract) => (
-            <TableRow key={contract.id}>
-              <TableCell>{contract.id}</TableCell>
-              <TableCell>{contract.regulationNumber}</TableCell>
-              <TableCell>{contract.title}</TableCell>
-              <TableCell>{contract.startingPrice.toLocaleString()}</TableCell>
-              <TableCell>
-                {formatDate(contract.registerStartDate, "HH:mm dd-MM-yyyy")} -{" "}
-                {formatDate(contract.registerExpiredDate, "HH:mm dd-MM-yyyy")}
-              </TableCell>
-
-              <TableCell>
-                {formatDate(contract.auctionDate, "HH:mm dd-MM-yyyy")} -{" "}
-                {formatDate(
-                  String(
-                    new Date(
-                      new Date(contract.auctionDate).getTime() +
-                        contract.auctionTime * 60000,
-                    ),
-                  ),
-                  "HH:mm dd-MM-yyyy",
-                )}
-              </TableCell>
-              <TableCell>
-                <Badge className={getStatusClassName(contract.status)}>
-                  {CONTRACT_STATUS_LABELS[contract.status]}
-                </Badge>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={6} className="py-8 text-center">
+                Đang tải danh sách hồ sơ...
               </TableCell>
             </TableRow>
-          ))}
+          ) : contracts.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="py-8 text-center">
+                Chưa có hồ sơ gần đây.
+              </TableCell>
+            </TableRow>
+          ) : (
+            contracts.map((contract) => (
+              <TableRow key={contract.id}>
+                <TableCell>{contract.id}</TableCell>
+                <TableCell className="font-medium">
+                  {contract.contractNumber}
+                </TableCell>
+                <TableCell>{contract.propertyName}</TableCell>
+                <TableCell>
+                  <Badge
+                    className={getPropertyTypeClassName(contract.propertyType)}
+                  >
+                    {PROPERTY_TYPE_LABELS[contract.propertyType]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge className={getStatusClassName(contract.status)}>
+                    {CONTRACT_STATUS_LABELS[contract.status]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    className={getPaymentStatusClassName(
+                      contract.paymentStatus,
+                    )}
+                  >
+                    {PAYMENT_STATUS_LABELS[contract.paymentStatus]}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
