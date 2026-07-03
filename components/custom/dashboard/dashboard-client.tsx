@@ -255,7 +255,6 @@ const DashboardClient = ({
               chartData={paymentStatusChartData}
               isLoading={isLoading}
             />
-            /
           </div>
         </div>
       </div>

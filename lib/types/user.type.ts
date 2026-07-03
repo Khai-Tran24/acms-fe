@@ -8,6 +8,7 @@ export interface UserResponse {
 
 export interface UserData {
   id: string;
+  avatar?: string;
   username: string;
   email: string;
   isActive: boolean;

@@ -91,7 +91,7 @@ export const UpdateContractDiscountPriceForm = ({
           <PriceInput
             control={control}
             name="amount"
-            label="Số tiền giảm giá"
+            label="Số tiền sau giảm giá"
             error={errors.amount?.message}
           />
         </FieldGroup>
