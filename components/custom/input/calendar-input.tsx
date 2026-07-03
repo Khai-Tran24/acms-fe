@@ -62,7 +62,7 @@ export const CalendarInput = ({
 
     const dateStr = date.split("T")[0];
     if (enableTime && date.includes("T")) {
-      const timeStr = date.split("T")[1];
+      const timeStr = date.split("T")[1].slice(0, 5); // Get HH:mm
       return `${formatDate(new Date(dateStr), "dd-MM-yyyy")} ${timeStr}`;
     }
     return formatDate(new Date(dateStr), "dd-MM-yyyy");

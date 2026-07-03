@@ -178,7 +178,7 @@ const ContractDetailPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Lần giảm giá</TableHead>
-                    <TableHead>Giá giảm</TableHead>
+                    <TableHead>Giá sau khi giảm</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
