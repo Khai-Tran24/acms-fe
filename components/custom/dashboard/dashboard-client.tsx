@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import getAnalyticsApi, {
   AnalyticsParams,
 } from "@/lib/api/analytics/analytics.api";
-import { ContractStatus, PaymentStatus } from "@/lib/enums/contract.enum";
+import { ContractStatus } from "@/lib/enums/contract.enum";
 import { AnalyticsData, ChartData } from "@/lib/types/analytic.type";
 import {
   CircleCheck,
