@@ -1,4 +1,4 @@
-import DashboardClient from "../../../components/custom/dashboard/dashboard-client";
+import DashboardClient from "@/components/custom/dashboard/dashboard-client";
 
 type DashboardSearchParams = Promise<{
   startDate?: string | string[];

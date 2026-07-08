@@ -91,7 +91,7 @@ const SignUpPage = () => {
     try {
       const result = await verifyOtp({ email, otp: Number(otp) });
 
-      if (result.status === "success") {
+      if (result.success === true) {
         toast.success(
           "Xác thực OTP thành công! Bạn sẽ được chuyển hướng đến trang đăng nhập.",
         );

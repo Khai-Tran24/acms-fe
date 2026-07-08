@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await signIn(loginData);
 
-      if (response.status === "success" && response.data.accessToken) {
+      if (response.success === true && response.data.accessToken) {
         const token = response.data.accessToken;
         localStorage.setItem("accessToken", token);
         const decoded = decodeJwt(token);
@@ -107,12 +107,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (decoded?.role === RoleEnum.ADMIN) {
             router.push("/admin/dashboard");
           } else {
-            router.push("/contracts");
+            router.push("/dashboard");
           }
           setIsLoading(false);
         }, 1000);
       } else {
-        throw new Error(response.message || "Login failed");
+        throw new Error(
+          response.message || "Lỗi đăng nhập, vui lòng thử lại sau!",
+        );
       }
     } catch (err: unknown) {
       error(
@@ -150,7 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await signUp(registerData);
 
-      if (response.status === "success") {
+      if (response.success === true) {
         success(
           "Đăng ký thành công, vui lòng kiểm tra email để xác nhận tài khoản!",
         );
