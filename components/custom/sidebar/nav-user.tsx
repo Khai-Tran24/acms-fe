@@ -19,10 +19,28 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/context/auth-context";
+import Link from "next/link";
+import { RoleEnum } from "@/lib/enums/role.enum";
+import { useEffect, useState } from "react";
+import { UserData } from "@/lib/types/user.type";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user, logout } = useAuth();
+  // Keep the server and first client render identical. Profile edits are
+  // applied after hydration through the event subscription below.
+  const [profile, setProfile] = useState<UserData | null>(null);
+
+  console.log("user", profile ?? user);
+
+  useEffect(() => {
+    const update = (event: Event) =>
+      setProfile((event as CustomEvent<UserData>).detail);
+    window.addEventListener("profile-updated", update);
+    return () => window.removeEventListener("profile-updated", update);
+  }, []);
+
+  const displayUser = profile ?? user;
 
   const handleLogout = async () => {
     await logout();
@@ -38,14 +56,19 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user?.avatar} alt={user?.username} />
+                <AvatarImage
+                  src={displayUser?.avatar}
+                  alt={displayUser?.username}
+                />
                 <AvatarFallback className="rounded-lg">
-                  {user?.username?.charAt(0).toUpperCase()}
+                  {displayUser?.username?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.username}</span>
-                <span className="truncate text-xs">{user?.email}</span>
+                <span className="truncate font-medium">
+                  {displayUser?.username}
+                </span>
+                <span className="truncate text-xs">{displayUser?.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -59,32 +82,45 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user?.avatar} alt={user?.username} />
+                  <AvatarImage
+                    src={displayUser?.avatar}
+                    alt={displayUser?.username}
+                  />
                   <AvatarFallback className="rounded-lg">
-                    {user?.username?.charAt(0).toUpperCase()}
+                    {displayUser?.username?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user?.username}</span>
-                  <span className="truncate text-xs">{user?.email}</span>
+                  <span className="truncate font-medium">
+                    {displayUser?.username}
+                  </span>
+                  <span className="truncate text-xs">{displayUser?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+              <DropdownMenuItem asChild>
+                <Link
+                  href={
+                    user?.role === RoleEnum.ADMIN
+                      ? "/admin/account"
+                      : "/account"
+                  }
+                >
+                  <BadgeCheck />
+                  Tài khoản
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />
-                Notifications
+                Thông báo
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
-              Log out
+              Đăng xuất
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

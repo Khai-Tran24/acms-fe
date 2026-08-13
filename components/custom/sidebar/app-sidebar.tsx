@@ -14,16 +14,17 @@ import {
 import { NavUser } from "./nav-user";
 import Link from "next/link";
 
-const AppSidebar = ({
-  items,
-}: {
+type SidebarItem = {
+  group: string;
   items: {
+    icon: React.ReactNode;
     label: string;
     href: string;
     isActive: boolean;
-    icon: React.ReactNode;
   }[];
-}) => {
+};
+
+const AppSidebar = ({ items }: { items: SidebarItem[] }) => {
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
@@ -36,21 +37,23 @@ const AppSidebar = ({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Quản lý</SidebarGroupLabel>
-          <SidebarMenu className="gap-2">
-            {items.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton asChild isActive={item.isActive}>
-                  <Link href={item.href}>
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
+        {items.map((group, index) => (
+          <SidebarGroup key={index}>
+            <SidebarGroupLabel>{group.group}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.map((item, itemIndex) => (
+                <SidebarMenuItem key={itemIndex}>
+                  <SidebarMenuButton key={itemIndex} isActive={item.isActive} asChild>
+                    <Link href={item.href} className="flex w-full items-center gap-2">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

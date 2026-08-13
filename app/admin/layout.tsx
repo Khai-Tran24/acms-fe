@@ -6,46 +6,93 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Sheet, User } from "lucide-react";
+import {
+  Building2,
+  FileCheck2,
+  Gavel,
+  LayoutDashboard,
+  Megaphone,
+  ScrollText,
+  Users,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
-import React from "react";
 
-const AdminLayout = ({ children }: { children: React.ReactNode }) => {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-
-
-  const adminSidebarItems = [
+  const active = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+  const items = [
     {
-      icon: <LayoutDashboard size={32} />,
-      label: "Thống kê",
-      href: "/admin/dashboard",
-      isActive: pathname === "/admin/dashboard",
+      group: "Tổng quan",
+      items: [
+        {
+          icon: <LayoutDashboard />,
+          label: "Thống kê",
+          href: "/admin/dashboard",
+          isActive: active("/admin/dashboard"),
+        },
+      ],
     },
     {
-      icon: <User size={32} />,
-      label: "Quản lý người dùng",
-      href: "/admin/users",
-      isActive: pathname === "/admin/users",
+      group: "Quản trị",
+      items: [
+        {
+          icon: <Users />,
+          label: "Người dùng",
+          href: "/admin/users",
+          isActive: active("/admin/users"),
+        },
+      ],
     },
     {
-      icon: <Sheet size={32} />,
-      label: "Quản lý hợp đồng",
-      href: "/admin/contracts",
-      isActive: pathname === "/admin/contracts",
+      group: "Quản lý nghiệp vụ",
+      items: [
+        {
+          icon: <ScrollText />,
+          label: "Hợp đồng",
+          href: "/admin/contracts",
+          isActive: active("/admin/contracts"),
+        },
+        {
+          icon: <Building2 />,
+          label: "Tài sản",
+          href: "/admin/properties",
+          isActive: active("/admin/properties"),
+        },
+        {
+          icon: <Gavel />,
+          label: "Quy chế",
+          href: "/admin/regulations",
+          isActive: active("/admin/regulations"),
+        },
+        {
+          icon: <Megaphone />,
+          label: "Thông báo",
+          href: "/admin/announcements",
+          isActive: active("/admin/announcements"),
+        },
+        {
+          icon: <FileCheck2 />,
+          label: "Thanh lý hợp đồng",
+          href: "/admin/auction-results",
+          isActive: active("/admin/auction-results"),
+        },
+      ],
     },
   ];
-
   return (
     <SidebarProvider>
-      <AppSideBar items={adminSidebarItems} />
+      <AppSideBar items={items} />
       <SidebarInset>
-        <main>
-          <SidebarTrigger />
+        <main className="min-w-0">
+          <SidebarTrigger className="m-2" />
           {children}
         </main>
       </SidebarInset>
     </SidebarProvider>
   );
-};
-
-export default AdminLayout;
+}

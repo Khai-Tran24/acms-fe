@@ -3,7 +3,6 @@ import { Controller } from "react-hook-form";
 import { Input } from "../../ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import type { ComponentProps } from "react";
-import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
 import {
   InputGroup,
   InputGroupAddon,

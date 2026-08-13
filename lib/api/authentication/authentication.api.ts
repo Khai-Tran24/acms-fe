@@ -9,11 +9,11 @@ import {
 
 const signIn = async (loginData: LoginRequest) => {
   try {
-    const response = await api.post("/auth/signin", {
-      loginIdentify: loginData.loginIdentify,
+    const response = await api.post("/auth/login", {
+      email: loginData.loginIdentify,
       password: loginData.password,
     });
-    return response.data as Response<{ accessToken: string }>;
+    return response.data as Response<{ accessToken: string; refreshToken: string }>;
   } catch (error) {
     console.error("Error during sign in:", error);
     throw error;
@@ -26,10 +26,16 @@ const signUp = async (registerData: RegisterRequest) => {
       username: registerData.username,
       email: registerData.email,
       password: registerData.password,
-      role: registerData.role,
+      fullName: registerData.username,
+      role:
+        registerData.role === "AUCTIONEER"
+          ? "DAU_GIA_VIEN"
+          : registerData.role === "SECRETARY"
+            ? "THU_KY"
+            : registerData.role,
     };
 
-    const response = await api.post("/auth/signup", payload);
+    const response = await api.post("/auth/register", payload);
     return response.data as Response<null>;
   } catch (error) {
     console.error("Error during sign up:", error);
@@ -39,7 +45,10 @@ const signUp = async (registerData: RegisterRequest) => {
 
 const verifyOtp = async (verifyOtpData: VerifyOtpRequest) => {
   try {
-    const response = await api.post("/auth/verify-otp", verifyOtpData);
+    const response = await api.post("/auth/verify-email", {
+      ...verifyOtpData,
+      otp: String(verifyOtpData.otp).padStart(6, "0"),
+    });
     return response.data as Response<null>;
   } catch (error) {
     console.error("Error during OTP verification:", error);
@@ -49,23 +58,26 @@ const verifyOtp = async (verifyOtpData: VerifyOtpRequest) => {
 
 const signOut = async () => {
   try {
-    const response = await api.post("/auth/signout");
+    const refreshToken = localStorage.getItem("refreshToken");
+    const response = await api.post("/auth/logout", { refreshToken });
 
     if (response.data.success) {
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
     }
 
     return response.data as Response<null>;
   } catch (error) {
     console.error("Error during sign out:", error);
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     throw error;
   }
 };
 
 const getProfile = async () => {
   try {
-    const response = await api.get("/auth/profile");
+    const response = await api.get("/auth/me");
     return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -86,6 +98,8 @@ const getAccessToken = (): string | null => {
 const clearAuth = (): void => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   }
 };
 
@@ -107,12 +121,25 @@ const resetPassword = async (
   try {
     const response = await api.post("/auth/reset-password", {
       email,
-      token,
+      otp: String(token).padStart(6, "0"),
       newPassword,
     });
     return response.data as Response<null>;
   } catch (error) {
     console.error("Error during reset password:", error);
+    throw error;
+  }
+};
+
+const refreshToken = async (refreshToken: string) => {
+  try {
+    const response = await api.post("/auth/refresh", { refreshToken });
+    return response.data as Response<{
+      accessToken: string;
+      refreshToken?: string;
+    }>;
+  } catch (error) {
+    console.error("Error during token refresh:", error);
     throw error;
   }
 };
@@ -128,4 +155,5 @@ export {
   clearAuth,
   forgotPassword,
   resetPassword,
+  refreshToken,
 };

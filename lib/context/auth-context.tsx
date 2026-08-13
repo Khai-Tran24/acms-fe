@@ -94,6 +94,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success === true && response.data.accessToken) {
         const token = response.data.accessToken;
         localStorage.setItem("accessToken", token);
+        if (response.data.refreshToken) {
+          localStorage.setItem("refreshToken", response.data.refreshToken);
+        }
         const decoded = decodeJwt(token);
 
         setIsAuthenticated(true);
@@ -197,6 +200,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUserRole(null);
     }
   };
+
+  // const refresh = async () => {
+  //   const refreshToken = localStorage.getItem("refreshToken");
+  //   if (!refreshToken) {
+  //     setIsAuthenticated(false);
+  //     setUser(null);
+  //     setUserRole(null);
+  //     return;
+  //   }
+
+  //   try {
+  //     const response = await refreshToken(refreshToken);
+  //     if (response.success && response.data.accessToken) {
+  //       const newAccessToken = response.data.accessToken;
+  //       localStorage.setItem("accessToken", newAccessToken);
+  //       const decoded = decodeJwt(newAccessToken);
+  //       setIsAuthenticated(true);
+  //       setUser(decoded);
+  //       setUserRole((decoded?.role as RoleEnum) || null);
+  //     } else {
+  //       throw new Error(response.message || "Failed to refresh token");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error refreshing token:", error);
+  //     setIsAuthenticated(false);
+  //     setUser(null);
+  //     setUserRole(null);
+  //   }
+  // };
 
   const value: AuthContextType = {
     isAuthenticated,

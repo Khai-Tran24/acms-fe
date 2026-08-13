@@ -4,7 +4,7 @@ import api from "../api";
 
 const getAllUsers = async (query?: GetUsersQuery) => {
   try {
-    const response = await api.get("/users", { params: query });
+    const response = await api.get("/user", { params: query });
     return response.data as Response<UserResponse>;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -14,7 +14,7 @@ const getAllUsers = async (query?: GetUsersQuery) => {
 
 const getUserDetails = async (userId: string) => {
   try {
-    const response = await api.get(`/users/${userId}`);
+    const response = await api.get(`/user/${userId}`);
     return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -24,7 +24,7 @@ const getUserDetails = async (userId: string) => {
 
 const createUser = async (userData: Partial<UserData>) => {
   try {
-    const response = await api.post("/users", userData);
+    const response = await api.post("/user", userData);
     return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -34,7 +34,7 @@ const createUser = async (userData: Partial<UserData>) => {
 
 const updateUser = async (userId: string, userData: Partial<UserData>) => {
   try {
-    const response = await api.patch(`/users/${userId}`, userData);
+    const response = await api.patch(`/user/${userId}`, userData);
     return response.data as Response<UserData>;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -44,7 +44,7 @@ const updateUser = async (userId: string, userData: Partial<UserData>) => {
 
 const deleteUser = async (userId: string) => {
   try {
-    const response = await api.delete(`/users/${userId}`);
+    const response = await api.delete(`/user/${userId}`);
     return response.data as Response<null>;
   } catch (error) {
     console.error("Error deleting user:", error);

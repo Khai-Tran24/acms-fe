@@ -11,3 +11,10 @@ export interface Pagination {
   totalItems: number;
   totalPages: number;
 }
+
+export const DEFAULT_PAGINATION: Pagination = {
+  page: 1,
+  limit: 10,
+  totalItems: 0,
+  totalPages: 1,
+};
