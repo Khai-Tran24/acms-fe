@@ -10,7 +10,7 @@ import { RoleEnum } from "@/lib/enums/role.enum";
 
 const getAllContracts = async (query?: GetContractsQuery) => {
   try {
-    const response = await api.get("/contracts", { params: query });
+    const response = await api.get("/contract", { params: query });
     return response.data as Response<ContractsResponse>;
   } catch (error) {
     console.error("Error fetching contracts:", error);
@@ -20,7 +20,7 @@ const getAllContracts = async (query?: GetContractsQuery) => {
 
 const getContractById = async (id: string) => {
   try {
-    const response = await api.get(`/contracts/${id}`);
+    const response = await api.get(`/contract/${id}`);
     return response.data as Response<ContractData>;
   } catch (error) {
     console.error("Error fetching contract:", error);
@@ -30,7 +30,7 @@ const getContractById = async (id: string) => {
 
 const createContract = async (contractData: ContractPayload) => {
   try {
-    const response = await api.post("/contracts", contractData);
+    const response = await api.post("/contract", contractData);
     return response.data as Response<ContractData>;
   } catch (error) {
     console.error("Error creating contract:", error);
@@ -43,7 +43,7 @@ const updateContract = async (
   contractData: Partial<ContractPayload>,
 ) => {
   try {
-    const response = await api.patch(`/contracts/${id}`, contractData);
+    const response = await api.patch(`/contract/${id}`, contractData);
     return response.data as Response<ContractData>;
   } catch (error) {
     console.error("Error updating contract:", error);
@@ -53,7 +53,7 @@ const updateContract = async (
 
 const deleteContract = async (id: string) => {
   try {
-    const response = await api.delete(`/contracts/${id}`);
+    const response = await api.delete(`/contract/${id}`);
     return response.data as Response<ContractData>;
   } catch (error) {
     console.error("Error deleting contract:", error);

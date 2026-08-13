@@ -10,7 +10,9 @@ export interface UserData {
   id: string;
   avatar?: string;
   username: string;
+  fullName: string;
   email: string;
+  phone?: string;
   isActive: boolean;
   role: RoleEnum;
   refreshToken?: string;

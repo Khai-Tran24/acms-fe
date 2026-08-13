@@ -1,20 +1,37 @@
-import { Response } from "@/lib/types/reponse.type";
 import api from "../api";
-import { AnalyticsData } from "@/lib/types/analytic.type";
+import { Response } from "@/lib/types/reponse.type";
+import {
+  AssetBreakdownItem,
+  DashboardData,
+  DashboardSummary,
+  DashboardTimeframe,
+  LiquidatedFile,
+  RecentFile,
+  TopOfficer,
+  TrendPoint,
+} from "@/lib/types/analytic.type";
 
-export interface AnalyticsParams {
-  startDate?: string;
-  endDate?: string;
-}
-
-const getAnalyticsApi = async (params: AnalyticsParams = {}) => {
-  try {
-    const response = await api.get("/analytics", { params });
-    return response.data as Response<AnalyticsData>;
-  } catch (error) {
-    console.error("Error fetching analytics data:", error);
-    throw error;
+const get = async <T>(url: string, params?: Record<string, string>) => {
+  const response = await api.get<Response<T>>(url, { params });
+  if (!response.data.success || response.data.data == null) {
+    throw new Error(response.data.message || "Không thể tải dữ liệu dashboard");
   }
+  return response.data.data;
 };
 
-export default getAnalyticsApi;
+export const getDashboardData = async (
+  timeframe: DashboardTimeframe = "12m",
+): Promise<DashboardData> => {
+  const [summary, trends, assetBreakdown, contractsOverTime, recentFiles, liquidatedFiles, topOfficers] =
+    await Promise.all([
+      get<DashboardSummary>("/api/dashboard/summary"),
+      get<TrendPoint[]>("/api/dashboard/charts/trends", { timeframe }),
+      get<AssetBreakdownItem[]>("/api/dashboard/charts/asset-breakdown"),
+      get<TrendPoint[]>("/api/dashboard/charts/contracts-over-time"),
+      get<RecentFile[]>("/api/dashboard/tables/recent-files"),
+      get<LiquidatedFile[]>("/api/dashboard/tables/liquidated-files"),
+      get<TopOfficer[]>("/api/dashboard/tables/top-officers"),
+    ]);
+
+  return { summary, trends, assetBreakdown, contractsOverTime, recentFiles, liquidatedFiles, topOfficers };
+};
