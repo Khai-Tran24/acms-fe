@@ -30,12 +30,14 @@ import {
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useToast } from "@/lib/hooks/use-toast";
 import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
+import { auctionFinalPrice } from "@/lib/helper/auction-finance.helper";
 import { DEFAULT_PAGINATION, Pagination } from "@/lib/types/reponse.type";
 import { ResourceItem, ResourceName } from "@/lib/types/resource.type";
 import { Edit, Eye, Plus, Search, Trash2, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/context/auth-context";
+import { formatDate } from "date-fns";
 
 type FieldKind =
   | "text"
@@ -54,6 +56,11 @@ export interface ResourceField {
   options?: { label: string; value: string }[];
   table?: boolean;
   form?: boolean;
+  defaultValue?: string;
+  placeholder?: string;
+  helpText?: string;
+  sendEmptyAsNull?: boolean;
+  jsonShape?: "object" | "cost-array";
 }
 
 export interface ResourceManagerProps {
@@ -65,7 +72,9 @@ export interface ResourceManagerProps {
 }
 
 const emptyForm = (fields: ResourceField[]) =>
-  Object.fromEntries(fields.map((field) => [field.key, ""]));
+  Object.fromEntries(
+    fields.map((field) => [field.key, field.defaultValue ?? ""]),
+  );
 
 const inputType = (kind?: FieldKind) => {
   if (
@@ -77,6 +86,24 @@ const inputType = (kind?: FieldKind) => {
     return kind === "datetime" ? "datetime-local" : kind;
   }
   return "text";
+};
+
+const currencyInputFields = new Set([
+  "startingPrice",
+  "stepPrice",
+  "winningPrice",
+  "depositAmount",
+  "registrationFee",
+]);
+
+const formatCurrencyInput = (value: string) => {
+  if (!value) return "";
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(
+        amount,
+      )
+    : "";
 };
 
 const toInputValue = (value: unknown, kind?: FieldKind) => {
@@ -100,7 +127,10 @@ const displayValue = (value: unknown, field: ResourceField) => {
     const date = new Date(String(value));
     return Number.isNaN(date.getTime())
       ? String(value)
-      : date.toLocaleString("vi-VN");
+      : formatDate(
+          date,
+          field.kind === "date" ? "dd/MM/yyyy" : "HH:mm dd/MM/yyyy",
+        );
   }
   if (
     [
@@ -109,6 +139,7 @@ const displayValue = (value: unknown, field: ResourceField) => {
       "stepPrice",
       "registrationFee",
       "winningPrice",
+      "finalPrice",
     ].includes(field.key)
   ) {
     return formatCurrency(Number(value));
@@ -122,6 +153,65 @@ const errorMessage = (error: unknown) => {
   )?.response?.data?.message;
   return Array.isArray(message) ? message.join(", ") : message;
 };
+
+const latestRecord = (value: unknown) => {
+  if (!Array.isArray(value)) return undefined;
+  return [...value]
+    .filter(
+      (item): item is Record<string, unknown> =>
+        Boolean(item) && typeof item === "object",
+    )
+    .sort((left, right) => Number(right.id ?? 0) - Number(left.id ?? 0))[0];
+};
+
+type JsonEntry = { key: string; value: string };
+
+const jsonEntries = (
+  value: string,
+  shape: ResourceField["jsonShape"],
+): JsonEntry[] => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (shape === "cost-array" && Array.isArray(parsed)) {
+      return parsed.flatMap((item) =>
+        item && typeof item === "object"
+          ? [
+              {
+                key: String((item as Record<string, unknown>).name ?? ""),
+                value: String((item as Record<string, unknown>).amount ?? ""),
+              },
+            ]
+          : [],
+      );
+    }
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return Object.entries(parsed).map(([key, entryValue]) => ({
+        key,
+        value:
+          entryValue && typeof entryValue === "object"
+            ? JSON.stringify(entryValue)
+            : String(entryValue ?? ""),
+      }));
+    }
+  } catch {
+    return [];
+  }
+  return [];
+};
+
+const serializeJsonEntries = (
+  entries: JsonEntry[],
+  shape: ResourceField["jsonShape"],
+) =>
+  JSON.stringify(
+    shape === "cost-array"
+      ? entries.map((entry) => ({
+          name: entry.key,
+          amount: Number(entry.value.replace(/\D/g, "")),
+        }))
+      : Object.fromEntries(entries.map((entry) => [entry.key, entry.value])),
+  );
 
 export function ResourceManager({
   resource,
@@ -150,6 +240,7 @@ export function ResourceManager({
   );
   const [propertyName, setPropertyName] = useState("");
   const [propertyType, setPropertyType] = useState("TAI_SAN_KHAC");
+  const [propertyLocation, setPropertyLocation] = useState("");
   const [creatingProperty, setCreatingProperty] = useState(false);
   const [checkingAssignee, setCheckingAssignee] = useState(false);
   const [assigneeMessage, setAssigneeMessage] = useState("");
@@ -197,6 +288,7 @@ export function ResourceManager({
     setContractProperties([]);
     setPropertyName("");
     setPropertyType("TAI_SAN_KHAC");
+    setPropertyLocation("");
     setFormOpen(true);
   };
 
@@ -265,7 +357,8 @@ export function ResourceManager({
     Object.fromEntries(
       fields.flatMap((field) => {
         const value = form[field.key];
-        if (!field.required && value === "") return [];
+        if (!field.required && value === "")
+          return field.sendEmptyAsNull ? [[field.key, null]] : [];
         if (field.kind === "number") return [[field.key, Number(value)]];
         if (field.key === "isActive") return [[field.key, value === "true"]];
         if (field.kind === "json") return [[field.key, JSON.parse(value)]];
@@ -276,12 +369,13 @@ export function ResourceManager({
     );
 
   const createContractProperty = async () => {
-    if (!propertyName.trim()) return;
+    if (!propertyName.trim() || !propertyLocation.trim()) return;
     setCreatingProperty(true);
     try {
       const created = await createResource("property", {
         propertyName: propertyName.trim(),
         propertyType,
+        propertyLocation: propertyLocation.trim(),
       });
       setContractProperties((current) => [
         ...current,
@@ -293,6 +387,7 @@ export function ResourceManager({
       ]);
       setPropertyName("");
       setPropertyType("TAI_SAN_KHAC");
+      setPropertyLocation("");
       toastRef.current.success("Đã tạo và thêm tài sản vào hợp đồng.");
     } catch (error) {
       toastRef.current.error(errorMessage(error) ?? "Không thể tạo tài sản.");
@@ -375,8 +470,32 @@ export function ResourceManager({
     setCheckingContract(true);
     try {
       const contract = await getResource("contract", id);
+      const sources: Record<string, unknown>[] = [contract];
+
+      if (resource === "announcement" || resource === "auction-result") {
+        const regulation = latestRecord(contract.regulations);
+        if (regulation) sources.push(regulation);
+      }
+      if (resource === "auction-result") {
+        const announcement = latestRecord(contract.announcements);
+        if (announcement) sources.push(announcement);
+      }
+
+      const autofilled = Object.fromEntries(
+        fields.flatMap((field) => {
+          if (field.key === "contractId") return [];
+          const source = [...sources]
+            .reverse()
+            .find((candidate) => candidate[field.key] != null);
+          if (!source) return [];
+          return [[field.key, toInputValue(source[field.key], field.kind)]];
+        }),
+      );
+      setForm((current) => ({ ...current, ...autofilled }));
+
+      const autofilledCount = Object.keys(autofilled).length;
       setContractMessage(
-        `Đã tìm thấy: ${String(contract.contractNumber ?? `#${contract.id}`)} — ${String(contract.contractName ?? "Không có tên")}`,
+        `Đã tìm thấy: ${String(contract.contractNumber ?? `#${contract.id}`)} — ${String(contract.contractName ?? "Không có tên")}${autofilledCount ? `. Đã tự động điền ${autofilledCount} trường.` : "."}`,
       );
     } catch {
       setContractMessage("Không tìm thấy hợp đồng với ID này.");
@@ -396,10 +515,12 @@ export function ResourceManager({
               : "Tạo, xem, chỉnh sửa và xóa dữ liệu trực tiếp từ hệ thống."}
           </p>
         </div>
-        {!readOnly && <Button onClick={openCreate}>
-          <Plus className="mr-2 size-4" />
-          Thêm {singular}
-        </Button>}
+        {!readOnly && (
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 size-4" />
+            Thêm {singular}
+          </Button>
+        )}
       </div>
 
       <section className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-foreground/10">
@@ -428,7 +549,9 @@ export function ResourceManager({
                 {tableFields.map((field) => (
                   <TableHead key={field.key}>{field.label}</TableHead>
                 ))}
-                {!readOnly && <TableHead className="w-36 text-right">Thao tác</TableHead>}
+                {!readOnly && (
+                  <TableHead className="w-36 text-right">Thao tác</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -462,40 +585,47 @@ export function ResourceManager({
                           field.key === "contractId"
                             ? (item.contract as { contractNumber?: string })
                                 ?.contractNumber
+                            : field.key === "finalPrice"
+                              ? auctionFinalPrice(
+                                  item.winningPrice,
+                                  item.auctionCost,
+                                )
                             : item[field.key],
                           field,
                         )}
                       </TableCell>
                     ))}
-                    {!readOnly && <TableCell>
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          title="Xem"
-                          onClick={() => openView(item)}
-                        >
-                          <Eye />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          title="Sửa"
-                          onClick={() => openEdit(item)}
-                        >
-                          <Edit />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          title="Xóa"
-                          className="text-destructive"
-                          onClick={() => remove(item)}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    </TableCell>}
+                    {!readOnly && (
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            title="Xem"
+                            onClick={() => openView(item)}
+                          >
+                            <Eye />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            title="Sửa"
+                            onClick={() => openEdit(item)}
+                          >
+                            <Edit />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            title="Xóa"
+                            className="text-destructive"
+                            onClick={() => remove(item)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
@@ -563,17 +693,126 @@ export function ResourceManager({
                     ))}
                   </select>
                 ) : field.kind === "json" ? (
-                  <textarea
-                    id={`${resource}-${field.key}`}
-                    required={field.required}
-                    value={form[field.key]}
-                    onChange={(e) =>
-                      setForm({ ...form, [field.key]: e.target.value })
-                    }
-                    rows={4}
-                    className="border-input bg-background w-full rounded-md border px-3 py-2 font-mono text-sm"
-                    placeholder={'{"name": "..."}'}
-                  />
+                  <div className="space-y-2 rounded-lg border p-3">
+                    {jsonEntries(form[field.key], field.jsonShape).map(
+                      (entry, index, entries) => (
+                        <div
+                          key={`${field.key}-${index}`}
+                          className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+                        >
+                          <Input
+                            aria-label={
+                              field.jsonShape === "cost-array"
+                                ? "Tên khoản chi"
+                                : "Khóa"
+                            }
+                            placeholder={
+                              field.jsonShape === "cost-array"
+                                ? "Tên khoản chi"
+                                : "Khóa"
+                            }
+                            value={entry.key}
+                            onChange={(event) => {
+                              const next = entries.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...item, key: event.target.value }
+                                  : item,
+                              );
+                              setForm({
+                                ...form,
+                                [field.key]: serializeJsonEntries(
+                                  next,
+                                  field.jsonShape,
+                                ),
+                              });
+                            }}
+                          />
+                          <Input
+                            aria-label={
+                              field.jsonShape === "cost-array"
+                                ? "Số tiền"
+                                : "Giá trị"
+                            }
+                            placeholder={
+                              field.jsonShape === "cost-array"
+                                ? "Số tiền"
+                                : "Giá trị"
+                            }
+                            inputMode={
+                              field.jsonShape === "cost-array"
+                                ? "numeric"
+                                : undefined
+                            }
+                            value={
+                              field.jsonShape === "cost-array"
+                                ? formatCurrencyInput(entry.value)
+                                : entry.value
+                            }
+                            onChange={(event) => {
+                              const nextValue =
+                                field.jsonShape === "cost-array"
+                                  ? event.target.value.replace(/\D/g, "")
+                                  : event.target.value;
+                              const next = entries.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...item, value: nextValue }
+                                  : item,
+                              );
+                              setForm({
+                                ...form,
+                                [field.key]: serializeJsonEntries(
+                                  next,
+                                  field.jsonShape,
+                                ),
+                              });
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Xóa dòng"
+                            onClick={() =>
+                              setForm({
+                                ...form,
+                                [field.key]: serializeJsonEntries(
+                                  entries.filter(
+                                    (_, itemIndex) => itemIndex !== index,
+                                  ),
+                                  field.jsonShape,
+                                ),
+                              })
+                            }
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      ),
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const entries = jsonEntries(
+                          form[field.key],
+                          field.jsonShape,
+                        );
+                        setForm({
+                          ...form,
+                          [field.key]: serializeJsonEntries(
+                            [...entries, { key: "", value: "" }],
+                            field.jsonShape,
+                          ),
+                        });
+                      }}
+                    >
+                      <Plus /> Thêm{" "}
+                      {field.jsonShape === "cost-array"
+                        ? "khoản chi"
+                        : "khóa và giá trị"}
+                    </Button>
+                  </div>
                 ) : field.key === "assignedToId" ? (
                   <div className="space-y-2">
                     <div className="flex gap-2">
@@ -598,7 +837,9 @@ export function ResourceManager({
                       </Button>
                     </div>
                     {assigneeMessage && (
-                      <p className="text-xs text-muted-foreground">{assigneeMessage}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {assigneeMessage}
+                      </p>
                     )}
                   </div>
                 ) : field.key === "contractId" ? (
@@ -631,6 +872,26 @@ export function ResourceManager({
                       </p>
                     )}
                   </div>
+                ) : currencyInputFields.has(field.key) ? (
+                  <div className="relative">
+                    <Input
+                      id={`${resource}-${field.key}`}
+                      required={field.required}
+                      type="text"
+                      inputMode="numeric"
+                      min={0}
+                      value={formatCurrencyInput(form[field.key])}
+                      placeholder={field.placeholder ?? "0"}
+                      className="pr-10"
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "");
+                        setForm({ ...form, [field.key]: digits });
+                      }}
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                      ₫
+                    </span>
+                  </div>
                 ) : (
                   <Input
                     id={`${resource}-${field.key}`}
@@ -644,10 +905,16 @@ export function ResourceManager({
                     }
                     min={field.kind === "number" ? 0 : undefined}
                     value={form[field.key]}
+                    placeholder={field.placeholder}
                     onChange={(e) =>
                       setForm({ ...form, [field.key]: e.target.value })
                     }
                   />
+                )}
+                {field.helpText && (
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    {field.helpText}
+                  </p>
                 )}
               </div>
             ))}
@@ -660,7 +927,7 @@ export function ResourceManager({
                     khi lưu.
                   </p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_220px_auto] sm:items-end">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="inline-property-name">Tên tài sản</Label>
                     <Input
@@ -684,10 +951,27 @@ export function ResourceManager({
                       <option value="TAI_SAN_KHAC">Tài sản khác</option>
                     </select>
                   </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="inline-property-location">
+                      Địa điểm tài sản
+                    </Label>
+                    <Input
+                      id="inline-property-location"
+                      value={propertyLocation}
+                      onChange={(event) =>
+                        setPropertyLocation(event.target.value)
+                      }
+                      placeholder="Nhập địa chỉ hoặc nơi lưu giữ tài sản"
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={!propertyName.trim() || creatingProperty}
+                    disabled={
+                      !propertyName.trim() ||
+                      !propertyLocation.trim() ||
+                      creatingProperty
+                    }
                     onClick={createContractProperty}
                   >
                     <Plus className="mr-2 size-4" />

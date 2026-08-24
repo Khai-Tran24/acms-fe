@@ -34,10 +34,7 @@ import { RoleEnum } from "@/lib/enums/role.enum";
 
 const contractSchema: yup.ObjectSchema<ContractPayload> = yup.object({
   contractNumber: yup.string().trim().required("Số hợp đồng là bắt buộc"),
-  contractYear: yup
-    .number()
-    .typeError("Năm hợp đồng phải là một số")
-    .required("Năm hợp đồng là bắt buộc"),
+  contractDate: yup.string().nullable().optional(),
   propertyName: yup.string().trim().required("Tên tài sản là bắt buộc"),
   propertyType: yup
     .mixed<PropertyType>()
@@ -149,7 +146,7 @@ export const ContractForm = ({
           <div className="mb-2">
             <h2 className="text-lg font-semibold">Thông tin chung</h2>
             <p className="text-sm text-muted-foreground">
-              Mã hợp đồng, năm và thông tin tài sản.
+              Mã hợp đồng, ngày ký và thông tin tài sản.
             </p>
           </div>
           <Separator className="mb-4" />
@@ -161,13 +158,24 @@ export const ContractForm = ({
               placeholder="Nhập số hợp đồng"
               error={errors.contractNumber?.message}
             />
-            <TextInput
+            <Controller
+              name="contractDate"
               control={control}
-              name="contractYear"
-              label="Năm hợp đồng"
-              placeholder="Ví dụ: 2026"
-              type="number"
-              error={errors.contractYear?.message}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Ngày ký hợp đồng</FieldLabel>
+                  <CalendarInput
+                    date={(field.value as string) ?? ""}
+                    onDateChange={field.onChange}
+                    placeholder="Chọn ngày ký hợp đồng"
+                  />
+                  {errors.contractDate?.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.contractDate.message}
+                    </p>
+                  )}
+                </Field>
+              )}
             />
             <TextInput
               control={control}

@@ -10,13 +10,29 @@ const contractFields: ResourceField[] = [
     required: true,
     options: [
       { value: "HOP_DONG_MOI", label: "Hợp đồng mới" },
-      { value: "HOP_DONG_BO_SUNG", label: "Hợp đồng bổ sung" },
-      { value: "HOP_DONG_SUA_DOI", label: "Hợp đồng sửa đổi" },
-      { value: "HOP_DONG_SUA_DOI_BO_SUNG", label: "Sửa đổi bổ sung" },
-      { value: "HOP_DONG_RUT_GON", label: "Hợp đồng rút gọn" },
+      { value: "HOP_DONG_SUA_DOI_BO_SUNG", label: "Hợp đồng sửa đổi bổ sung" },
     ],
   },
-  { key: "contractYear", label: "Năm", kind: "number", required: true },
+  {
+    key: "contractOwnerType",
+    label: "Nhóm chủ sở hữu tài sản",
+    kind: "select",
+    options: [
+      { value: "TAI_SAN_THI_HANH_AN", label: "Tài sản thi hành án" },
+      { value: "TAI_SAN_CONG", label: "Tài sản công" },
+      {
+        value: "TAI_SAN_CUA_TO_CHUC_TIN_DUNG",
+        label: "Tài sản của tổ chức tín dụng",
+      },
+      { value: "TAI_SAN_CUA_CAC_BEN_KHAC", label: "Tài sản của các bên khác" },
+    ],
+  },
+  {
+    key: "contractDate",
+    label: "Ngày ký hợp đồng",
+    kind: "date",
+    sendEmptyAsNull: true,
+  },
   {
     key: "contractStatus",
     label: "Trạng thái",
@@ -44,7 +60,13 @@ const contractFields: ResourceField[] = [
     required: true,
     table: false,
   },
-  { key: "customer", label: "Khách hàng (JSON)", kind: "json", table: false },
+  {
+    key: "customer",
+    label: "Khách hàng",
+    kind: "json",
+    jsonShape: "object",
+    table: false,
+  },
   {
     key: "assignedToId",
     label: "ID người phụ trách",
@@ -67,12 +89,17 @@ const propertyFields: ResourceField[] = [
       { value: "TAI_SAN_KHAC", label: "Tài sản khác" },
     ],
   },
+  {
+    key: "propertyLocation",
+    label: "Địa điểm tài sản",
+    required: true,
+    placeholder: "Nhập địa chỉ hoặc nơi lưu giữ tài sản",
+  },
 ];
 
 const auctionFields = (
   numberKey: string,
   numberLabel: string,
-  timeKind: "number" | "time",
 ): ResourceField[] => [
   { key: numberKey, label: numberLabel, required: true },
   {
@@ -117,8 +144,8 @@ const auctionFields = (
   },
   {
     key: "auctionTime",
-    label: timeKind === "time" ? "Giờ đấu giá" : "Thời lượng đấu giá",
-    kind: timeKind,
+    label: "Thời lượng đấu giá",
+    kind: "number",
     required: true,
     table: false,
   },
@@ -128,14 +155,31 @@ const auctionFields = (
 ];
 
 const resultFields: ResourceField[] = [
-  { key: "auctionResultNumber", label: "Số kết quả", required: true },
-  {
-    key: "winner",
-    label: "Người trúng đấu giá (JSON)",
-    kind: "json",
-    required: true,
-  },
+  { key: "auctionResultNumber", label: "Số thanh lý", required: true },
+  // {
+  //   key: "winner",
+  //   label: "Người trúng đấu giá",
+  //   kind: "json",
+  //   jsonShape: "object",
+  //   required: true,
+  // },
   { key: "winningPrice", label: "Giá trúng", kind: "number", required: true },
+  {
+    key: "auctionCost",
+    label: "Chi phí đấu giá",
+    kind: "json",
+    jsonShape: "cost-array",
+    required: true,
+    defaultValue: "[]",
+    table: false,
+    helpText: "Thêm từng khoản chi và số tiền tương ứng.",
+  },
+  {
+    key: "finalPrice",
+    label: "Giá trị sau khi trừ các chi phí",
+    kind: "number",
+    form: false,
+  },
   {
     key: "completedAt",
     label: "Thời gian hoàn tất",
@@ -209,7 +253,7 @@ export const RegulationModulePage = () => (
     resource="regulation"
     title="Quản lý quy chế"
     singular="quy chế"
-    fields={auctionFields("regulationNumber", "Số quy chế", "number")}
+    fields={auctionFields("regulationNumber", "Số quy chế")}
   />
 );
 export const AnnouncementModulePage = () => (
@@ -217,7 +261,7 @@ export const AnnouncementModulePage = () => (
     resource="announcement"
     title="Quản lý thông báo"
     singular="thông báo"
-    fields={auctionFields("announcementNumber", "Số thông báo", "time")}
+    fields={auctionFields("announcementNumber", "Số thông báo")}
   />
 );
 export const AuctionResultModulePage = () => (

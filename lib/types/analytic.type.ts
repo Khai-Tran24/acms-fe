@@ -20,6 +20,11 @@ export interface AssetBreakdownItem {
   totalValue: number;
 }
 
+export interface ContractOwnerBreakdownItem {
+  ownerType: string | null;
+  fileCount: number;
+}
+
 export interface RecentFile {
   id: number;
   fileCode: string;
@@ -50,7 +55,7 @@ export interface DashboardData {
   summary: DashboardSummary;
   trends: TrendPoint[];
   assetBreakdown: AssetBreakdownItem[];
-  contractsOverTime: TrendPoint[];
+  contractOwnerBreakdown: ContractOwnerBreakdownItem[];
   recentFiles: RecentFile[];
   liquidatedFiles: LiquidatedFile[];
   topOfficers: TopOfficer[];
@@ -59,7 +64,6 @@ export interface DashboardData {
 // Kept for the reusable legacy chart/table components still used elsewhere.
 import { ContractStatus, PaymentStatus, PropertyType } from "../enums/contract.enum";
 export interface ChartData {
-  contractsOverTime: { labels: string[]; data: number[] };
   percentageOfContractsByStatus: { labels: string[]; data: number[] };
   percentageOfContractsByPropertyType: { labels: string[]; data: number[] };
   percentageOfContractsByPaymentStatus: { labels: string[]; data: number[] };

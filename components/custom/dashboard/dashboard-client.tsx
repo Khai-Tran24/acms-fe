@@ -21,8 +21,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -75,6 +73,13 @@ const STATUS_LABELS: Record<string, string> = {
   TAM_DUNG: "Tạm dừng",
   DA_THANH_LY: "Đã thanh lý",
 };
+const CONTRACT_OWNER_LABELS: Record<string, string> = {
+  TAI_SAN_THI_HANH_AN: "Tài sản thi hành án",
+  TAI_SAN_CONG: "Tài sản công",
+  TAI_SAN_CUA_TO_CHUC_TIN_DUNG: "Tài sản của tổ chức tín dụng",
+  TAI_SAN_CUA_CAC_BEN_KHAC: "Tài sản của các bên khác",
+  UNKNOWN: "Chưa xác định",
+};
 
 const EMPTY: DashboardData = {
   summary: {
@@ -86,7 +91,7 @@ const EMPTY: DashboardData = {
   },
   trends: [],
   assetBreakdown: [],
-  contractsOverTime: [],
+  contractOwnerBreakdown: [],
   recentFiles: [],
   liquidatedFiles: [],
   topOfficers: [],
@@ -143,8 +148,6 @@ const DashboardClient = () => {
     }
   }, [timeframe]);
 
-  // The effect synchronizes the selected reporting range with the remote API.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const loader = async () => {
       void load();
@@ -279,6 +282,7 @@ const DashboardClient = () => {
           <Panel
             title="Xu hướng đấu giá"
             subtitle="Giá trị đấu giá thành công và số lượng hồ sơ"
+            className="xl:col-span-2"
           >
             <div className="mb-3 flex justify-end gap-1">
               {(["30d", "6m", "12m", "year"] as DashboardTimeframe[]).map(
@@ -358,6 +362,7 @@ const DashboardClient = () => {
               </AreaChart>
             </ResponsiveContainer>
           </Panel>
+
           <Panel
             title="Cơ cấu hồ sơ theo loại tài sản"
             subtitle="Phân bổ theo số lượng hồ sơ"
@@ -393,51 +398,40 @@ const DashboardClient = () => {
             </ResponsiveContainer>
           </Panel>
           <Panel
-            title="Thống kê hợp đồng dịch vụ đấu giá"
-            subtitle="Số lượng và giá trị hợp đồng trong 12 tháng"
-            className="xl:col-span-2"
+            title="Cơ cấu hợp đồng theo nhóm chủ sở hữu tài sản"
+            subtitle="Phân bổ theo số lượng hợp đồng"
           >
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={data.contractsOverTime}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="period"
-                  tickFormatter={formatPeriod}
-                  fontSize={11}
-                />
-                <YAxis yAxisId="count" allowDecimals={false} fontSize={11} />
-                <YAxis
-                  yAxisId="value"
-                  orientation="right"
-                  tickFormatter={(v) => COMPACT.format(v)}
-                  fontSize={11}
-                />
-                <Tooltip
-                  labelFormatter={(value) => formatPeriod(String(value))}
-                  formatter={(v, name) =>
-                    name === "auctionValue"
-                      ? [VND.format(Number(v)), "Giá trị"]
-                      : [NUMBER.format(Number(v)), "Hợp đồng"]
-                  }
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === "auctionValue" ? "Giá trị hợp đồng" : "Số hợp đồng"
-                  }
-                />
-                <Bar
-                  yAxisId="count"
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={data.contractOwnerBreakdown.map((item) => ({
+                    ...item,
+                    ownerType: item.ownerType ?? "UNKNOWN",
+                  }))}
                   dataKey="fileCount"
-                  fill="#2563eb"
-                  radius={[5, 5, 0, 0]}
+                  nameKey="ownerType"
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={72}
+                  outerRadius={112}
+                  paddingAngle={3}
+                >
+                  {data.contractOwnerBreakdown.map((item, index) => (
+                    <Cell
+                      key={item.ownerType ?? "UNKNOWN"}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(v) => [
+                    `${NUMBER.format(Number(v))} hợp đồng`,
+                    "Số lượng",
+                  ]}
+                  labelFormatter={(v) => CONTRACT_OWNER_LABELS[String(v)] ?? v}
                 />
-                <Bar
-                  yAxisId="value"
-                  dataKey="auctionValue"
-                  fill="#93c5fd"
-                  radius={[5, 5, 0, 0]}
-                />
-              </BarChart>
+                <Legend formatter={(v) => CONTRACT_OWNER_LABELS[v] ?? v} />
+              </PieChart>
             </ResponsiveContainer>
           </Panel>
         </div>
