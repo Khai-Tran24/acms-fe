@@ -14,7 +14,7 @@ export interface ContractsResponse {
 export interface ContractData {
   id: string;
   contractNumber: string;
-  contractYear: number;
+  contractDate?: Date | string | null;
   propertyName: string;
   propertyType: PropertyType;
   propertyOwner: PropertyOwner;

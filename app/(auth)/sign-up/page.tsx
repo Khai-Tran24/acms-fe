@@ -58,6 +58,14 @@ interface SignUpFormData {
   role: RoleEnum;
 }
 
+const ROLE_LABELS: Record<RoleEnum, string> = {
+  [RoleEnum.AUCTIONEER]: "Đấu giá viên",
+  [RoleEnum.SECRETARY]: "Thư ký",
+  [RoleEnum.SPECIALIST]: "Chuyên viên",
+  [RoleEnum.ARCHIVIST]: "Nhân viên lưu trữ",
+  [RoleEnum.ADMIN]: "Quản trị viên",
+};
+
 const SignUpPage = () => {
   const router = useRouter();
   const { register: registerUser, isLoading } = useAuth();
@@ -225,11 +233,7 @@ const SignUpPage = () => {
                       if (role === RoleEnum.ADMIN) return null;
                       return (
                         <SelectItem key={role} value={role}>
-                          {role === RoleEnum.AUCTIONEER
-                            ? "Đấu giá viên"
-                            : role === RoleEnum.SECRETARY
-                              ? "Thư ký"
-                              : role}
+                          {ROLE_LABELS[role]}
                         </SelectItem>
                       );
                     })}

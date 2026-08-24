@@ -90,7 +90,7 @@ export const toDateInputValue = (value?: string) => {
 
 export const getContractDefaults = (contract?: ContractPayload) => ({
   contractNumber: contract?.contractNumber ?? "",
-  contractYear: contract?.contractYear ?? new Date().getFullYear(),
+  contractDate: contract?.contractDate ?? "",
   propertyName: contract?.propertyName ?? "",
   propertyType: contract?.propertyType ?? PropertyType.DONG_SAN,
   propertyOwner: {
