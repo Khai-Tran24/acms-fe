@@ -3,8 +3,8 @@ import { Response } from "@/lib/types/reponse.type";
 
 const baseURL =
   process.env.NODE_ENV === "production"
-    ? process.env.API_KEY || "https://api.example.com"
-    : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+    ? process.env.API_KEY
+    : process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const api = axios.create({
   baseURL,
