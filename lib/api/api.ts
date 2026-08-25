@@ -2,7 +2,9 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { Response } from "@/lib/types/reponse.type";
 
 const baseURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+  process.env.NODE_ENV === "production"
+    ? process.env.API_KEY || "https://api.example.com"
+    : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 const api = axios.create({
   baseURL,
