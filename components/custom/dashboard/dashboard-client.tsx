@@ -3,8 +3,28 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDashboardData } from "@/lib/api/analytics/analytics.api";
+import { exportContractsToExcel } from "@/lib/api/contract/contract.api";
+import { useToast } from "@/lib/hooks/use-toast";
 import { DashboardData, DashboardTimeframe } from "@/lib/types/analytic.type";
 import {
   Activity,
@@ -12,6 +32,7 @@ import {
   ArrowUpRight,
   BriefcaseBusiness,
   CircleDollarSign,
+  Download,
   FileClock,
   Files,
   RefreshCw,
@@ -127,6 +148,7 @@ const Panel = ({
 );
 
 const DashboardClient = () => {
+  const toast = useToast();
   const [data, setData] = useState(EMPTY);
   const [timeframe, setTimeframe] = useState<DashboardTimeframe>("12m");
   const [activeTable, setActiveTable] = useState<
@@ -134,6 +156,58 @@ const DashboardClient = () => {
   >("recent");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportFilters, setExportFilters] = useState({
+    search: "",
+    contractStatus: "all",
+    contractDateFrom: "",
+    contractDateTo: "",
+  });
+
+  const handleExport = async () => {
+    if (
+      exportFilters.contractDateFrom &&
+      exportFilters.contractDateTo &&
+      exportFilters.contractDateFrom > exportFilters.contractDateTo
+    ) {
+      toast.error("Ngày bắt đầu không thể sau ngày kết thúc.");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const blob = await exportContractsToExcel({
+        ...(exportFilters.search.trim() && {
+          search: exportFilters.search.trim(),
+        }),
+        ...(exportFilters.contractStatus !== "all" && {
+          contractStatus: exportFilters.contractStatus,
+        }),
+        ...(exportFilters.contractDateFrom && {
+          contractDateFrom: exportFilters.contractDateFrom,
+        }),
+        ...(exportFilters.contractDateTo && {
+          contractDateTo: exportFilters.contractDateTo,
+        }),
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `hop-dong-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      setExportOpen(false);
+      toast.success("Xuất dữ liệu thành công.");
+    } catch (cause) {
+      console.error(cause);
+      toast.error("Không thể xuất dữ liệu. Vui lòng thử lại.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -211,16 +285,122 @@ const DashboardClient = () => {
               Theo dõi hồ sơ, giá trị và hiệu suất xử lý tập trung.
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => void load()}
-            disabled={loading}
-            className="bg-white"
-          >
-            <RefreshCw className={loading ? "animate-spin" : ""} /> Làm mới dữ
-            liệu
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => setExportOpen(true)}>
+              <Download className="mr-2 h-4 w-4" />
+              Xuất dữ liệu
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void load()}
+              disabled={loading}
+              className="bg-white"
+            >
+              <RefreshCw className={loading ? "animate-spin" : ""} /> Làm mới dữ
+              liệu
+            </Button>
+          </div>
         </div>
+        <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Xuất dữ liệu hợp đồng</DialogTitle>
+              <DialogDescription>
+                Nhập điều kiện lọc trước khi xuất. Để trống để xuất toàn bộ dữ
+                liệu hiện có.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-2">
+              <div className="grid gap-2">
+                <Label htmlFor="export-search">Từ khóa</Label>
+                <Input
+                  id="export-search"
+                  value={exportFilters.search}
+                  onChange={(event) =>
+                    setExportFilters((current) => ({
+                      ...current,
+                      search: event.target.value,
+                    }))
+                  }
+                  placeholder="Số hợp đồng, tên hợp đồng, khách hàng..."
+                  disabled={exporting}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Trạng thái</Label>
+                <Select
+                  value={exportFilters.contractStatus}
+                  onValueChange={(contractStatus) =>
+                    setExportFilters((current) => ({
+                      ...current,
+                      contractStatus,
+                    }))
+                  }
+                  disabled={exporting}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="export-date-from">Ngày hợp đồng từ</Label>
+                  <Input
+                    id="export-date-from"
+                    type="date"
+                    value={exportFilters.contractDateFrom}
+                    onChange={(event) =>
+                      setExportFilters((current) => ({
+                        ...current,
+                        contractDateFrom: event.target.value,
+                      }))
+                    }
+                    disabled={exporting}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="export-date-to">Đến ngày</Label>
+                  <Input
+                    id="export-date-to"
+                    type="date"
+                    value={exportFilters.contractDateTo}
+                    onChange={(event) =>
+                      setExportFilters((current) => ({
+                        ...current,
+                        contractDateTo: event.target.value,
+                      }))
+                    }
+                    disabled={exporting}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline" disabled={exporting}>
+                  Hủy
+                </Button>
+              </DialogClose>
+              <Button onClick={() => void handleExport()} disabled={exporting}>
+                {exporting ? (
+                  <RefreshCw className="animate-spin" />
+                ) : (
+                  <Download />
+                )}
+                {exporting ? "Đang xuất..." : "Xuất Excel"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {error && (
           <div
             role="alert"

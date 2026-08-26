@@ -31,8 +31,6 @@ export function NavUser() {
   // applied after hydration through the event subscription below.
   const [profile, setProfile] = useState<UserData | null>(null);
 
-  console.log("user", profile ?? user);
-
   useEffect(() => {
     const update = (event: Event) =>
       setProfile((event as CustomEvent<UserData>).detail);

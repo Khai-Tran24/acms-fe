@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import Link from "next/link";
+import Image from "next/image";
+import Logo from "@/assets/logo.png";
 
 type SidebarItem = {
   group: string;
@@ -29,8 +31,9 @@ const AppSidebar = ({ items }: { items: SidebarItem[] }) => {
     <Sidebar variant="inset">
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <p className="text-base font-semibold text-center">
+          <SidebarMenuItem className="flex items-center gap-2">
+            <Image src={Logo} alt="Logo" className="h-12 w-12" />
+            <p className="text-base font-semibold">
               Hệ thống quản lý hồ sơ đấu giá
             </p>
           </SidebarMenuItem>
@@ -43,8 +46,15 @@ const AppSidebar = ({ items }: { items: SidebarItem[] }) => {
             <SidebarMenu>
               {group.items.map((item, itemIndex) => (
                 <SidebarMenuItem key={itemIndex}>
-                  <SidebarMenuButton key={itemIndex} isActive={item.isActive} asChild>
-                    <Link href={item.href} className="flex w-full items-center gap-2">
+                  <SidebarMenuButton
+                    key={itemIndex}
+                    isActive={item.isActive}
+                    asChild
+                  >
+                    <Link
+                      href={item.href}
+                      className="flex w-full items-center gap-2"
+                    >
                       {item.icon}
                       <span>{item.label}</span>
                     </Link>

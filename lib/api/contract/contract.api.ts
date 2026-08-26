@@ -92,7 +92,7 @@ const updateContractDiscountPrice = async (
 
 const exportContractsToExcel = async (query?: GetContractsQuery) => {
   try {
-    const response = await api.get("/contracts/export/excel", {
+    const response = await api.get("/export-excel/contracts", {
       params: query,
       responseType: "blob",
     });

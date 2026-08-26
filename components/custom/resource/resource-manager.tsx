@@ -590,7 +590,7 @@ export function ResourceManager({
                                   item.winningPrice,
                                   item.auctionCost,
                                 )
-                            : item[field.key],
+                              : item[field.key],
                           field,
                         )}
                       </TableCell>

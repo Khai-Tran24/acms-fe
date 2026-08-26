@@ -73,4 +73,16 @@ export interface GetContractsQuery {
   filterByYear?: number;
   endRegisterDate?: string;
   auctionDate?: string;
+  contractNumber?: string;
+  contractName?: string;
+  contractType?: string;
+  contractOwnerType?: string;
+  contractDateFrom?: string;
+  contractDateTo?: string;
+  contractStatus?: string;
+  assignedToId?: number;
+  createdById?: number;
+  propertyId?: number;
+  createdFrom?: string;
+  createdTo?: string;
 }
