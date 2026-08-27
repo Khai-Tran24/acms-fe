@@ -9,6 +9,8 @@ interface PresignedUpload {
   s3Key: string;
 }
 
+export const MAX_UPLOAD_FILE_SIZE = 25 * 1024 * 1024;
+
 export async function uploadEntityFile(
   file: File,
   entityType: FileEntityType,
@@ -19,6 +21,7 @@ export async function uploadEntityFile(
     {
       fileName: file.name,
       fileType: file.type || "application/octet-stream",
+      fileSize: file.size,
       entityType,
       entityId,
     },

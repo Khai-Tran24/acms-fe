@@ -8,7 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { deleteFile, uploadEntityFile } from "@/lib/api/file/file.api";
+import {
+  deleteFile,
+  MAX_UPLOAD_FILE_SIZE,
+  uploadEntityFile,
+} from "@/lib/api/file/file.api";
 import { FileEntityType, ManagedFile } from "@/lib/types/file.type";
 import { Download, FileText, LoaderCircle, Trash2, Upload } from "lucide-react";
 import { ChangeEvent, useRef, useState } from "react";
@@ -45,6 +49,10 @@ export function FileSection({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    if (file.size > MAX_UPLOAD_FILE_SIZE) {
+      toast.error("Kích thước tệp không được vượt quá 25 MB.");
+      return;
+    }
     setUploading(true);
     try {
       await uploadEntityFile(file, entityType, entityId);
