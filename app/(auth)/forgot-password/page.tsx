@@ -60,9 +60,9 @@ const ForgotPasswordPage = () => {
 
   return (
     <>
-      <div className="flex flex-col justify-center items-center">
-        <h1 className="text-2xl font-bold">Quên mật khẩu</h1>
-        <p className="text-sm text-gray-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Quên mật khẩu</h1>
+        <p className="text-sm text-muted-foreground">
           Nhập email của bạn để nhận liên kết đặt lại mật khẩu.
         </p>
       </div>
@@ -78,14 +78,14 @@ const ForgotPasswordPage = () => {
               disabled={isLoading}
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-destructive text-sm mt-1">
                 {errors.email.message}
               </p>
             )}
           </Field>
 
           <Button
-            className="w-full"
+            className="w-full h-11"
             variant={"default"}
             type="submit"
             disabled={isLoading}
@@ -98,7 +98,7 @@ const ForgotPasswordPage = () => {
       <p className="text-sm text-muted-foreground text-center">
         Quay lại trang đăng nhập?{" "}
         <span
-          className="hover:underline cursor-pointer text-blue-600"
+          className="hover:underline cursor-pointer text-primary"
           onClick={() => !isLoading && router.push("/sign-in")}
         >
           Đăng nhập

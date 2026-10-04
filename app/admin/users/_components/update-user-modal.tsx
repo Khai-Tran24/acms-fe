@@ -107,14 +107,14 @@ export const UpdateUserModal = ({
           control={control}
           render={({ field }) => (
             <Field>
-              <FieldLabel className="text-sm font-medium text-gray-700">
+              <FieldLabel className="text-sm font-medium text-foreground">
                 Email
               </FieldLabel>
               <Input
                 {...field}
                 type="email"
                 placeholder="Nhập email"
-                className="mt-1 border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="mt-1 border border-input rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={true}
               />
               {errors.email && (
@@ -131,13 +131,13 @@ export const UpdateUserModal = ({
           control={control}
           render={({ field }) => (
             <Field>
-              <FieldLabel className="text-sm font-medium text-gray-700">
+              <FieldLabel className="text-sm font-medium text-foreground">
                 Tên người dùng
               </FieldLabel>
               <Input
                 {...field}
                 placeholder="Nhập tên người dùng"
-                className="mt-1 border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="mt-1 border border-input rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.username && (
                 <p className="mt-1 text-sm text-red-500">
@@ -199,7 +199,7 @@ export const UpdateUserModal = ({
           control={control}
           render={({ field }) => (
             <Field>
-              <FieldLabel className="text-sm font-medium text-gray-700">
+              <FieldLabel className="text-sm font-medium text-foreground">
                 Trạng thái hoạt động
               </FieldLabel>
               <div className="mt-1 flex items-center gap-2">
@@ -228,14 +228,14 @@ export const UpdateUserModal = ({
         <Button
           type="submit"
           disabled={isLoading}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-md transition-colors"
         >
           {isLoading ? "Đang cập nhật..." : "Cập nhật"}
         </Button>
         {/* <Button
           type="button"
           variant="outline"
-          className="flex-1 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-50 transition-colors"
+          className="flex-1 border border-input text-foreground font-medium py-2 px-4 rounded-md hover:bg-accent transition-colors"
           onClick={() => {
             setOpen(false);
           }}

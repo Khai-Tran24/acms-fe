@@ -106,14 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         success("Đăng nhập thành công!");
 
-        setTimeout(() => {
-          if (decoded?.role === RoleEnum.ADMIN) {
-            router.push("/admin/dashboard");
-          } else {
-            router.push("/dashboard");
-          }
-          setIsLoading(false);
-        }, 1000);
+        setIsLoading(false);
       } else {
         throw new Error(
           response.message || "Lỗi đăng nhập, vui lòng thử lại sau!",

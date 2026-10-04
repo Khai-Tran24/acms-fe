@@ -121,9 +121,9 @@ const SignUpPage = () => {
 
   return (
     <>
-      <div className="flex flex-col justify-center items-center">
-        <h1 className="text-2xl font-bold">Đăng ký</h1>
-        <p className="text-sm text-gray-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Đăng ký</h1>
+        <p className="text-sm text-muted-foreground">
           Đăng ký để sử dụng hệ thống quản lý hồ sơ đấu giá.
         </p>
       </div>
@@ -143,7 +143,7 @@ const SignUpPage = () => {
                   {...field}
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.email.message}
                   </p>
                 )}
@@ -164,7 +164,7 @@ const SignUpPage = () => {
                   {...field}
                 />
                 {errors.username && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.username.message}
                   </p>
                 )}
@@ -185,7 +185,7 @@ const SignUpPage = () => {
                   {...field}
                 />
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.password.message}
                   </p>
                 )}
@@ -206,7 +206,7 @@ const SignUpPage = () => {
                   {...field}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.confirmPassword.message}
                   </p>
                 )}
@@ -225,7 +225,7 @@ const SignUpPage = () => {
                   disabled={isLoading}
                   onValueChange={(value) => field.onChange(value)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-11">
                     <SelectValue placeholder="Chọn vai trò" />
                   </SelectTrigger>
                   <SelectContent>
@@ -240,7 +240,7 @@ const SignUpPage = () => {
                   </SelectContent>
                 </Select>
                 {errors.role && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.role.message}
                   </p>
                 )}
@@ -249,7 +249,7 @@ const SignUpPage = () => {
           />
 
           <Button
-            className="w-full"
+            className="w-full h-11"
             variant={"default"}
             type="submit"
             disabled={isLoading}
@@ -262,7 +262,7 @@ const SignUpPage = () => {
       <p className="text-sm text-muted-foreground text-center">
         Đã có tài khoản?{" "}
         <span
-          className="hover:underline cursor-pointer text-blue-600"
+          className="hover:underline cursor-pointer text-primary"
           onClick={() => !isLoading && router.push("/sign-in")}
         >
           Đăng nhập

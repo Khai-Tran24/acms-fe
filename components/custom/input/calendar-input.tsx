@@ -1,117 +1,117 @@
+"use client";
+
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "../../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
-import { formatDate } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
+import { formatDate } from "@/lib/helper/date-formatter.helper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 interface CalendarInputProps {
+  id?: string;
   date: string;
   onDateChange: (date: string) => void;
   placeholder?: string;
   enableTime?: boolean;
+  disabled?: boolean;
 }
 
 export const CalendarInput = ({
+  id,
   date,
   onDateChange,
   placeholder,
   enableTime = false,
-  ...calendarProps
+  disabled = false,
 }: CalendarInputProps) => {
-  // ISO 8601 format: YYYY-MM-DD or YYYY-MM-DDTHH:mm when time is enabled
-  const [hours, setHours] = useState(() => {
-    if (!date || !enableTime) return "00";
-    const time = date.split("T")[1]?.split(":")[0] || "00";
-    return time;
-  });
-
-  const [minutes, setMinutes] = useState(() => {
-    if (!date || !enableTime) return "00";
-    const time = date.split("T")[1]?.split(":")[1] || "00";
-    return time;
-  });
+  const parsed = date ? parseISO(date) : undefined;
+  const selected = parsed && isValid(parsed) ? parsed : undefined;
+  const hours = selected ? format(selected, "HH") : "00";
+  const minutes = selected ? format(selected, "mm") : "00";
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (!selectedDate) return;
-
-    if (enableTime) {
-      const dateStr = formatDate(selectedDate, "yyyy-MM-dd");
-      const timeStr = `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
-      onDateChange(`${dateStr}T${timeStr}`);
-    } else {
-      onDateChange(formatDate(selectedDate, "yyyy-MM-dd"));
-    }
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    onDateChange(enableTime ? `${dateStr}T${hours}:${minutes}` : dateStr);
   };
 
-  const handleTimeChange = (newHours: string, newMinutes: string) => {
-    setHours(newHours);
-    setMinutes(newMinutes);
-
-    // Update the date with new time
-    if (date) {
-      const dateStr = date.split("T")[0];
-      const timeStr = `${newHours.padStart(2, "0")}:${newMinutes.padStart(2, "0")}`;
-      onDateChange(`${dateStr}T${timeStr}`);
-    }
-  };
-
-  const getDisplayText = () => {
-    if (!date) return placeholder || "Select date";
-
-    const dateStr = date.split("T")[0];
-    if (enableTime && date.includes("T")) {
-      const timeStr = date.split("T")[1].slice(0, 5); // Get HH:mm
-      return `${formatDate(new Date(dateStr), "dd-MM-yyyy")} ${timeStr}`;
-    }
-    return formatDate(new Date(dateStr), "dd-MM-yyyy");
+  const handleTimeChange = (value: string, unit: "hours" | "minutes") => {
+    if (!selected) return;
+    const number = Number(value);
+    const maximum = unit === "hours" ? 23 : 59;
+    if (!Number.isInteger(number) || number < 0 || number > maximum) return;
+    const time = String(number).padStart(2, "0");
+    onDateChange(
+      `${format(selected, "yyyy-MM-dd")}T${unit === "hours" ? time : hours}:${unit === "minutes" ? time : minutes}`,
+    );
   };
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="justify-start">
+        <Button
+          id={id}
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          className="w-full justify-start"
+        >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {getDisplayText()}
+          {selected
+            ? formatDate(selected, enableTime)
+            : placeholder || (enableTime ? "dd/mm/yyyy hh:mm" : "dd/mm/yyyy")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3">
         <Calendar
           mode="single"
+          locale={vi}
           captionLayout="dropdown"
-          selected={date ? new Date(date.split("T")[0]) : undefined}
+          selected={selected}
+          defaultMonth={selected}
+          endMonth={new Date(2100, 11)}
           onSelect={handleDateSelect}
-          {...calendarProps}
         />
         {enableTime && (
           <div className="mt-4 flex gap-2 border-t pt-3">
-            <div className="flex flex-1 flex-col gap-1">
-              <label className="text-xs font-semibold">HH</label>
+            <label className="flex flex-1 flex-col gap-1 text-xs font-semibold">
+              Giờ
               <Input
                 type="number"
                 min="0"
                 max="23"
+                disabled={!selected}
                 value={hours}
-                onChange={(e) => handleTimeChange(e.target.value, minutes)}
+                onChange={(e) => handleTimeChange(e.target.value, "hours")}
                 className="h-8 text-center"
-                placeholder="00"
               />
-            </div>
-            <div className="text-xl font-bold">:</div>
-            <div className="flex flex-1 flex-col gap-1">
-              <label className="text-xs font-semibold">MM</label>
+            </label>
+            <div className="self-end text-xl font-bold">:</div>
+            <label className="flex flex-1 flex-col gap-1 text-xs font-semibold">
+              Phút
               <Input
                 type="number"
                 min="0"
                 max="59"
+                disabled={!selected}
                 value={minutes}
-                onChange={(e) => handleTimeChange(hours, e.target.value)}
+                onChange={(e) => handleTimeChange(e.target.value, "minutes")}
                 className="h-8 text-center"
-                placeholder="00"
               />
-            </div>
+            </label>
           </div>
+        )}
+        {date && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onDateChange("")}
+          >
+            Xóa ngày
+          </Button>
         )}
       </PopoverContent>
     </Popover>

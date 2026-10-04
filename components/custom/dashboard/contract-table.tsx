@@ -25,7 +25,7 @@ export const ContractTable = ({
   isLoading?: boolean;
 }) => {
   return (
-    <div className="rounded-lg bg-white p-4 ring-1 ring-foreground/10">
+    <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border">
       <p className="mb-2 text-lg font-bold">Hồ sơ gần đây</p>
       <Table>
         <TableHeader>

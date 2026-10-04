@@ -1,18 +1,17 @@
 "use client";
 
+import { AppHeader } from "@/components/custom/layout/app-header";
 import AppSideBar from "@/components/custom/sidebar/app-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  Building2,
   FileCheck2,
   Gavel,
   LayoutDashboard,
-  Megaphone,
   ScrollText,
+  SquareChartGantt,
   Users,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -34,6 +33,12 @@ export default function AdminLayout({
           label: "Thống kê",
           href: "/admin/dashboard",
           isActive: active("/admin/dashboard"),
+        },
+        {
+          icon: <SquareChartGantt />,
+          label: "Báo cáo",
+          href: "/admin/reports",
+          isActive: active("/admin/reports"),
         },
       ],
     },
@@ -57,27 +62,27 @@ export default function AdminLayout({
           href: "/admin/contracts",
           isActive: active("/admin/contracts"),
         },
-        {
-          icon: <Building2 />,
-          label: "Tài sản",
-          href: "/admin/properties",
-          isActive: active("/admin/properties"),
-        },
+        // {
+        //   icon: <Building2 />,
+        //   label: "Tài sản",
+        //   href: "/admin/properties",
+        //   isActive: active("/admin/properties"),
+        // },
         {
           icon: <Gavel />,
           label: "Quy chế",
           href: "/admin/regulations",
           isActive: active("/admin/regulations"),
         },
-        {
-          icon: <Megaphone />,
-          label: "Thông báo",
-          href: "/admin/announcements",
-          isActive: active("/admin/announcements"),
-        },
+        // {
+        //   icon: <Megaphone />,
+        //   label: "Thông báo",
+        //   href: "/admin/announcements",
+        //   isActive: active("/admin/announcements"),
+        // },
         {
           icon: <FileCheck2 />,
-          label: "Thanh lý hợp đồng",
+          label: "Kết quả đấu giá",
           href: "/admin/auction-results",
           isActive: active("/admin/auction-results"),
         },
@@ -87,11 +92,9 @@ export default function AdminLayout({
   return (
     <SidebarProvider>
       <AppSideBar items={items} />
-      <SidebarInset>
-        <main className="min-w-0">
-          <SidebarTrigger className="m-2" />
-          {children}
-        </main>
+      <SidebarInset className="min-w-0 overflow-clip ring-1 ring-border/70">
+        <AppHeader />
+        <div className="min-w-0 flex-1">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

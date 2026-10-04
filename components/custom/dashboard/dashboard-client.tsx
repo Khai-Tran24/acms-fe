@@ -1,30 +1,13 @@
 "use client";
 
+import { UpcomingAuctions } from "./upcoming-auctions";
+import { PageHeading } from "@/components/custom/layout/page-heading";
+import { ContractStatusBadge } from "@/components/custom/contract/contract-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDashboardData } from "@/lib/api/analytics/analytics.api";
-import { exportContractsToExcel } from "@/lib/api/contract/contract.api";
-import { useToast } from "@/lib/hooks/use-toast";
 import { DashboardData, DashboardTimeframe } from "@/lib/types/analytic.type";
 import {
   Activity,
@@ -32,7 +15,6 @@ import {
   ArrowUpRight,
   BriefcaseBusiness,
   CircleDollarSign,
-  Download,
   FileClock,
   Files,
   RefreshCw,
@@ -70,12 +52,12 @@ const COMPACT = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 1,
 });
 const COLORS = [
-  "#2563eb",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ef4444",
-  "#06b6d4",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--info)",
 ];
 const ASSET_LABELS: Record<string, string> = {
   BAT_DONG_SAN: "Bất động sản",
@@ -85,14 +67,6 @@ const ASSET_LABELS: Record<string, string> = {
   MAY_MOC_THIET_BI: "Máy móc, thiết bị",
   CHUNG_KHOAN: "Chứng khoán",
   TAI_SAN_KHAC: "Tài sản khác",
-};
-const STATUS_LABELS: Record<string, string> = {
-  MOI: "Mới",
-  DANG_DAU_GIA: "Đang đấu giá",
-  DAU_GIA_THANH: "Đấu giá thành",
-  DAU_GIA_KHONG_THANH: "Không thành",
-  TAM_DUNG: "Tạm dừng",
-  DA_THANH_LY: "Đã thanh lý",
 };
 const CONTRACT_OWNER_LABELS: Record<string, string> = {
   TAI_SAN_THI_HANH_AN: "Tài sản thi hành án",
@@ -136,19 +110,18 @@ const Panel = ({
   children: React.ReactNode;
   className?: string;
 }) => (
-  <Card className={`border-slate-200 shadow-sm ${className}`}>
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base font-semibold text-slate-900">
+  <Card className={`border-border shadow-sm ${className}`}>
+    <CardHeader className="border-b pb-4">
+      <CardTitle className="text-base font-semibold text-foreground">
         {title}
       </CardTitle>
-      <p className="text-xs text-slate-500">{subtitle}</p>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
     </CardHeader>
     <CardContent>{children}</CardContent>
   </Card>
 );
 
 const DashboardClient = () => {
-  const toast = useToast();
   const [data, setData] = useState(EMPTY);
   const [timeframe, setTimeframe] = useState<DashboardTimeframe>("12m");
   const [activeTable, setActiveTable] = useState<
@@ -156,59 +129,6 @@ const DashboardClient = () => {
   >("recent");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [exportOpen, setExportOpen] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [exportFilters, setExportFilters] = useState({
-    search: "",
-    contractStatus: "all",
-    contractDateFrom: "",
-    contractDateTo: "",
-  });
-
-  const handleExport = async () => {
-    if (
-      exportFilters.contractDateFrom &&
-      exportFilters.contractDateTo &&
-      exportFilters.contractDateFrom > exportFilters.contractDateTo
-    ) {
-      toast.error("Ngày bắt đầu không thể sau ngày kết thúc.");
-      return;
-    }
-
-    setExporting(true);
-    try {
-      const blob = await exportContractsToExcel({
-        ...(exportFilters.search.trim() && {
-          search: exportFilters.search.trim(),
-        }),
-        ...(exportFilters.contractStatus !== "all" && {
-          contractStatus: exportFilters.contractStatus,
-        }),
-        ...(exportFilters.contractDateFrom && {
-          contractDateFrom: exportFilters.contractDateFrom,
-        }),
-        ...(exportFilters.contractDateTo && {
-          contractDateTo: exportFilters.contractDateTo,
-        }),
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `hop-dong-${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
-      setExportOpen(false);
-      toast.success("Xuất dữ liệu thành công.");
-    } catch (cause) {
-      console.error(cause);
-      toast.error("Không thể xuất dữ liệu. Vui lòng thử lại.");
-    } finally {
-      setExporting(false);
-    }
-  };
-
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -234,7 +154,7 @@ const DashboardClient = () => {
       label: "Tổng số hồ sơ",
       value: NUMBER.format(data.summary.totalFiles),
       icon: Files,
-      color: "bg-blue-50 text-blue-700",
+      color: "bg-info-soft text-info",
       note: `${Math.abs(data.summary.growthRate)}% so với tháng trước`,
       growth: data.summary.growthRate,
     },
@@ -242,7 +162,7 @@ const DashboardClient = () => {
       label: "Tổng giá trị đấu giá thành công",
       value: VND.format(data.summary.totalSuccessfulValue),
       icon: CircleDollarSign,
-      color: "bg-emerald-50 text-emerald-700",
+      color: "bg-success-soft text-success",
       note: "Giá trị trúng đấu giá",
       growth: null,
     },
@@ -250,7 +170,7 @@ const DashboardClient = () => {
       label: "Tỷ lệ đấu giá thành công",
       value: `${data.summary.successRate}%`,
       icon: Trophy,
-      color: "bg-violet-50 text-violet-700",
+      color: "bg-lavender-soft text-lavender",
       note: "Trên tổng số hồ sơ",
       growth: null,
     },
@@ -258,7 +178,7 @@ const DashboardClient = () => {
       label: "Hồ sơ đang xử lý",
       value: NUMBER.format(data.summary.inProgressFiles),
       icon: FileClock,
-      color: "bg-amber-50 text-amber-700",
+      color: "bg-warning-soft text-warning",
       note: "Cần tiếp tục theo dõi",
       growth: null,
     },
@@ -266,7 +186,7 @@ const DashboardClient = () => {
 
   if (loading && data === EMPTY)
     return (
-      <div className="space-y-5 p-4 md:p-6">
+      <div className="page-container">
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-32 w-full" />
         ))}
@@ -274,137 +194,28 @@ const DashboardClient = () => {
     );
 
   return (
-    <div className="min-h-full p-4 md:p-6 ">
-      <div className="mx-auto max-w-[1600px] space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">
-              Bảng điều hành đấu giá
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Theo dõi hồ sơ, giá trị và hiệu suất xử lý tập trung.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setExportOpen(true)}>
-              <Download className="mr-2 h-4 w-4" />
-              Xuất dữ liệu
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => void load()}
-              disabled={loading}
-              className="bg-white"
-            >
-              <RefreshCw className={loading ? "animate-spin" : ""} /> Làm mới dữ
-              liệu
-            </Button>
-          </div>
-        </div>
-        <Dialog open={exportOpen} onOpenChange={setExportOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Xuất dữ liệu hợp đồng</DialogTitle>
-              <DialogDescription>
-                Nhập điều kiện lọc trước khi xuất. Để trống để xuất toàn bộ dữ
-                liệu hiện có.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-2">
-              <div className="grid gap-2">
-                <Label htmlFor="export-search">Từ khóa</Label>
-                <Input
-                  id="export-search"
-                  value={exportFilters.search}
-                  onChange={(event) =>
-                    setExportFilters((current) => ({
-                      ...current,
-                      search: event.target.value,
-                    }))
-                  }
-                  placeholder="Số hợp đồng, tên hợp đồng, khách hàng..."
-                  disabled={exporting}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Trạng thái</Label>
-                <Select
-                  value={exportFilters.contractStatus}
-                  onValueChange={(contractStatus) =>
-                    setExportFilters((current) => ({
-                      ...current,
-                      contractStatus,
-                    }))
-                  }
-                  disabled={exporting}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="export-date-from">Ngày hợp đồng từ</Label>
-                  <Input
-                    id="export-date-from"
-                    type="date"
-                    value={exportFilters.contractDateFrom}
-                    onChange={(event) =>
-                      setExportFilters((current) => ({
-                        ...current,
-                        contractDateFrom: event.target.value,
-                      }))
-                    }
-                    disabled={exporting}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="export-date-to">Đến ngày</Label>
-                  <Input
-                    id="export-date-to"
-                    type="date"
-                    value={exportFilters.contractDateTo}
-                    onChange={(event) =>
-                      setExportFilters((current) => ({
-                        ...current,
-                        contractDateTo: event.target.value,
-                      }))
-                    }
-                    disabled={exporting}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" disabled={exporting}>
-                  Hủy
-                </Button>
-              </DialogClose>
-              <Button onClick={() => void handleExport()} disabled={exporting}>
-                {exporting ? (
-                  <RefreshCw className="animate-spin" />
-                ) : (
-                  <Download />
-                )}
-                {exporting ? "Đang xuất..." : "Xuất Excel"}
+    <div className="page-container">
+      <div className="space-y-6">
+        <PageHeading
+          title="Bảng điều hành đấu giá"
+          description="Theo dõi hồ sơ, giá trị và hiệu suất xử lý tập trung."
+          icon={<Activity aria-hidden="true" />}
+          actions={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => void load()}
+                disabled={loading}
+              >
+                <RefreshCw className={loading ? "animate-spin" : ""} /> Làm mới
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </>
+          }
+        />
         {error && (
           <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="rounded-lg border border-destructive/20 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
             {error}
           </div>
@@ -414,9 +225,9 @@ const DashboardClient = () => {
           {cards.map(({ label, value, icon: Icon, color, note, growth }) => (
             <Card
               key={label}
-              className="border-slate-200 shadow-sm transition-shadow hover:shadow-md"
+              className="relative border-border bg-gradient-to-br from-card to-muted/40"
             >
-              <CardContent className="p-5">
+              <CardContent>
                 <div className="flex items-start justify-between gap-3">
                   <div className={`rounded-xl p-2.5 ${color}`}>
                     <Icon className="size-5" />
@@ -426,8 +237,8 @@ const DashboardClient = () => {
                       variant="secondary"
                       className={
                         growth >= 0
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-red-50 text-red-700"
+                          ? "bg-success-soft text-success"
+                          : "bg-destructive/10 text-destructive"
                       }
                     >
                       {growth >= 0 ? <ArrowUpRight /> : <ArrowDownRight />}
@@ -435,36 +246,36 @@ const DashboardClient = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="mt-4 text-sm text-slate-500">{label}</p>
+                <p className="mt-4 text-sm text-muted-foreground">{label}</p>
                 <p
-                  className="mt-1 truncate text-2xl font-bold text-slate-950"
+                  className="mt-1 break-words text-2xl font-semibold tracking-tight text-foreground tabular-nums"
                   title={value}
                 >
                   {value}
                 </p>
                 {label === "Tỷ lệ đấu giá thành công" && (
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-violet-600"
+                      className="h-full rounded-full bg-lavender"
                       style={{
                         width: `${Math.min(data.summary.successRate, 100)}%`,
                       }}
                     />
                   </div>
                 )}
-                <p className="mt-2 text-xs text-slate-400">{note}</p>
+                <p className="mt-2 text-xs text-muted-foreground">{note}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
+          <UpcomingAuctions />
           <Panel
             title="Xu hướng đấu giá"
             subtitle="Giá trị đấu giá thành công và số lượng hồ sơ"
-            className="xl:col-span-2"
           >
-            <div className="mb-3 flex justify-end gap-1">
+            <div className="mb-5 flex flex-wrap justify-end gap-1">
               {(["30d", "6m", "12m", "year"] as DashboardTimeframe[]).map(
                 (item) => (
                   <Button
@@ -489,28 +300,56 @@ const DashboardClient = () => {
               <AreaChart data={data.trends}>
                 <defs>
                   <linearGradient id="valueFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="var(--chart-1)"
+                      stopOpacity={0.25}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--chart-1)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid
+                  stroke="var(--border)"
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="period"
                   tickFormatter={formatPeriod}
                   fontSize={11}
+                  tick={{ fill: "var(--muted-foreground)" }}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
                   yAxisId="value"
                   tickFormatter={(v) => COMPACT.format(v)}
                   fontSize={11}
+                  tick={{ fill: "var(--muted-foreground)" }}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
                   yAxisId="count"
                   orientation="right"
                   allowDecimals={false}
                   fontSize={11}
+                  tick={{ fill: "var(--muted-foreground)" }}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--popover)",
+                    color: "var(--popover-foreground)",
+                  }}
+                  itemStyle={{ color: "var(--popover-foreground)" }}
                   labelFormatter={(value) => formatPeriod(String(value))}
                   formatter={(v, name) =>
                     name === "auctionValue"
@@ -527,7 +366,7 @@ const DashboardClient = () => {
                   yAxisId="value"
                   type="monotone"
                   dataKey="auctionValue"
-                  stroke="#2563eb"
+                  stroke="var(--chart-1)"
                   strokeWidth={2.5}
                   fill="url(#valueFill)"
                 />
@@ -535,7 +374,7 @@ const DashboardClient = () => {
                   yAxisId="count"
                   type="monotone"
                   dataKey="fileCount"
-                  stroke="#f59e0b"
+                  stroke="var(--chart-3)"
                   strokeWidth={2.5}
                   dot={{ r: 3 }}
                 />
@@ -567,6 +406,13 @@ const DashboardClient = () => {
                   ))}
                 </Pie>
                 <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--popover)",
+                    color: "var(--popover-foreground)",
+                  }}
+                  itemStyle={{ color: "var(--popover-foreground)" }}
                   formatter={(v) => [
                     `${NUMBER.format(Number(v))} hồ sơ`,
                     "Số lượng",
@@ -604,6 +450,13 @@ const DashboardClient = () => {
                   ))}
                 </Pie>
                 <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--popover)",
+                    color: "var(--popover-foreground)",
+                  }}
+                  itemStyle={{ color: "var(--popover-foreground)" }}
                   formatter={(v) => [
                     `${NUMBER.format(Number(v))} hợp đồng`,
                     "Số lượng",
@@ -653,7 +506,7 @@ const DashboardClient = () => {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="border-y bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-y bg-muted/65 text-xs text-muted-foreground">
                 {activeTable === "recent" && (
                   <tr>
                     <Th>ID</Th>
@@ -688,22 +541,20 @@ const DashboardClient = () => {
               <tbody className="divide-y">
                 {activeTable === "recent" &&
                   data.recentFiles.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-50">
+                    <tr key={row.id} className="hover:bg-muted/50">
                       <Td>{row.id}</Td>
                       <Td strong>{row.fileCode}</Td>
                       <Td>{row.assetName}</Td>
                       <Td>{DATE.format(new Date(row.createdDate))}</Td>
                       <Td>
-                        <Badge variant="secondary">
-                          {STATUS_LABELS[row.status] ?? row.status}
-                        </Badge>
+                        <ContractStatusBadge value={row.status} />
                       </Td>
                       <Td>{row.assignedOfficer}</Td>
                     </tr>
                   ))}
                 {activeTable === "liquidated" &&
                   data.liquidatedFiles.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-50">
+                    <tr key={row.id} className="hover:bg-muted/50">
                       <Td>{row.id}</Td>
                       <Td strong>{row.fileCode}</Td>
                       <Td>{VND.format(row.startingPrice)}</Td>
@@ -714,16 +565,16 @@ const DashboardClient = () => {
                   ))}
                 {activeTable === "officers" &&
                   data.topOfficers.map((row, index) => (
-                    <tr key={row.id} className="hover:bg-slate-50">
+                    <tr key={row.id} className="hover:bg-muted/50">
                       <Td>{row.id}</Td>
                       <Td strong>{row.officerName}</Td>
                       <Td>{NUMBER.format(row.handledFiles)}</Td>
                       <Td>{VND.format(row.totalValue)}</Td>
                       <Td>
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                             <div
-                              className="h-full bg-emerald-500"
+                              className="h-full bg-success"
                               style={{
                                 width: `${Math.min(row.completionRate, 100)}%`,
                               }}
@@ -733,7 +584,7 @@ const DashboardClient = () => {
                         </div>
                       </Td>
                       <Td>
-                        <Badge className="bg-amber-50 text-amber-700">
+                        <Badge className="bg-warning-soft text-warning">
                           #{index + 1}
                         </Badge>
                       </Td>
@@ -744,7 +595,7 @@ const DashboardClient = () => {
             {((activeTable === "recent" && !data.recentFiles.length) ||
               (activeTable === "liquidated" && !data.liquidatedFiles.length) ||
               (activeTable === "officers" && !data.topOfficers.length)) && (
-              <p className="py-10 text-center text-sm text-slate-500">
+              <p className="py-10 text-center text-sm text-muted-foreground">
                 Chưa có dữ liệu phù hợp.
               </p>
             )}
@@ -766,7 +617,7 @@ const Td = ({
   strong?: boolean;
 }) => (
   <td
-    className={`px-4 py-3.5 ${strong ? "font-semibold text-slate-900" : "text-slate-600"}`}
+    className={`px-4 py-3.5 ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}
   >
     {children}
   </td>

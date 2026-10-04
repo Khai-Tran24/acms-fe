@@ -3,7 +3,7 @@ export enum ContractStatus {
   DANG_DAU_GIA = "DANG_DAU_GIA",
   DAU_GIA_KHONG_THANH = "DAU_GIA_KHONG_THANH",
   DAU_GIA_THANH = "DAU_GIA_THANH",
-  TAM_DUNG = "TAM_DUNG",
+  DA_HUY = "DA_HUY",
   DA_THANH_LY = "DA_THANH_LY",
 }
 

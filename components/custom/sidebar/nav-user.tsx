@@ -51,14 +51,14 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="h-auto min-h-16 rounded-xl border border-sidebar-border bg-card/60 p-3 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
                   src={displayUser?.avatar}
                   alt={displayUser?.username}
                 />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary/10 font-semibold text-primary">
                   {displayUser?.username?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -66,7 +66,7 @@ export function NavUser() {
                 <span className="truncate font-medium">
                   {displayUser?.username}
                 </span>
-                <span className="truncate text-xs">{displayUser?.email}</span>
+                <span className="truncate text-xs text-muted-foreground">{displayUser?.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -84,7 +84,7 @@ export function NavUser() {
                     src={displayUser?.avatar}
                     alt={displayUser?.username}
                   />
-                  <AvatarFallback className="rounded-lg">
+                  <AvatarFallback className="rounded-lg bg-primary/10 font-semibold text-primary">
                     {displayUser?.username?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -92,7 +92,7 @@ export function NavUser() {
                   <span className="truncate font-medium">
                     {displayUser?.username}
                   </span>
-                  <span className="truncate text-xs">{displayUser?.email}</span>
+                  <span className="truncate text-xs text-muted-foreground">{displayUser?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

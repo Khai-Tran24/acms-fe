@@ -39,9 +39,9 @@ const SignInPage = () => {
 
   return (
     <>
-      <div className="flex flex-col justify-center items-center">
-        <h1 className="text-2xl font-bold">Đăng nhập</h1>
-        <p className="text-sm text-gray-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Đăng nhập</h1>
+        <p className="text-sm text-muted-foreground">
           Đăng nhập để sử dụng hệ thống quản lý hồ sơ đấu giá.
         </p>
       </div>
@@ -65,7 +65,7 @@ const SignInPage = () => {
                   {...field}
                 />
                 {errors.loginIdentify && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.loginIdentify.message}
                   </p>
                 )}
@@ -88,7 +88,7 @@ const SignInPage = () => {
                   disabled={isLoading}
                 />
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {errors.password.message}
                   </p>
                 )}
@@ -107,7 +107,7 @@ const SignInPage = () => {
           />
 
           <Button
-            className="w-full"
+            className="w-full h-11"
             variant={"default"}
             type="submit"
             disabled={isLoading}
@@ -120,7 +120,7 @@ const SignInPage = () => {
       <p className="text-sm text-muted-foreground text-center">
         Chưa có tài khoản?{" "}
         <span
-          className="hover:underline cursor-pointer text-blue-600"
+          className="hover:underline cursor-pointer text-primary"
           onClick={() => !isLoading && router.push("/sign-up")}
         >
           Đăng ký

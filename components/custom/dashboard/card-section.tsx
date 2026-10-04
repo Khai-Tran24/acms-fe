@@ -7,18 +7,18 @@ const CardSection = ({
     <div>
       {/* <Card className="flex ">
         <CardHeader>
-          <p className="text-xl font-bold">{data.title}</p>
+          <p className="text-2xl font-semibold tabular-nums">{data.title}</p>
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{data.value}</p>
         </CardContent>
       </Card> */}
 
-      <div className="flex items-center gap-4 rounded-lg bg-white p-4 ring-1 ring-foreground/10">
-        <div className="rounded-full bg-blue-100 p-3">{data.icon}</div>
+      <div className="flex items-center gap-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border">
+        <div className="rounded-xl bg-primary/10 text-primary p-3">{data.icon}</div>
         <div>
-          <p className="text-sm text-gray-500">{data.title}</p>
-          <p className="text-xl font-bold">{data.value}</p>
+          <p className="text-sm text-muted-foreground">{data.title}</p>
+          <p className="text-2xl font-semibold tabular-nums">{data.value}</p>
         </div>
       </div>
     </div>

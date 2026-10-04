@@ -10,6 +10,7 @@ import {
   RecentFile,
   TopOfficer,
   TrendPoint,
+  UpcomingAuction,
 } from "@/lib/types/analytic.type";
 
 const get = async <T>(url: string, params?: Record<string, string>) => {
@@ -53,3 +54,8 @@ export const getDashboardData = async (
     topOfficers,
   };
 };
+
+export const getUpcomingAuctions = () =>
+  get<UpcomingAuction[]>(
+    "/api/dashboard/tables/upcoming-auctions",
+  );

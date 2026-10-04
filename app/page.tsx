@@ -1,28 +1,21 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { ArrowRight, Gavel } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
-  const router = useRouter();
-
   return (
-    <>
-      <main className="flex h-screen w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <h1 className="text-4xl font-bold">
-            Chào mừng đến với hệ thống quản lý hồ sơ đấu giá
-          </h1>
-          <p className="text-lg text-gray-600">
-            Vui lòng đăng nhập để tiếp tục
-          </p>
-          <Button
-            onClick={() => router.push("/sign-in")}
-            className="px-4 py-2"
-          >
-            Đăng nhập
-          </Button>
+    <main className="flex min-h-svh items-center justify-center bg-gradient-to-br from-secondary via-background to-background p-5">
+      <div className="w-full max-w-xl space-y-6 rounded-2xl border bg-card p-8 text-center shadow-sm sm:p-12">
+        <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Gavel className="size-8" aria-hidden="true" /></span>
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Không gian làm việc tập trung</p>
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight">Hệ thống quản lý<br />hồ sơ đấu giá</h1>
+          <p className="text-sm leading-relaxed text-muted-foreground">Đăng nhập để theo dõi hợp đồng, quy chế và kết quả đấu giá.</p>
         </div>
-      </main>
-    </>
+        <Button asChild size="lg"><Link href="/sign-in">Đăng nhập <ArrowRight className="size-4" /></Link></Button>
+      </div>
+    </main>
   );
 }

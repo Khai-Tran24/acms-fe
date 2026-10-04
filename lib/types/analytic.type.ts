@@ -76,3 +76,13 @@ export interface recentContractsData {
   status: ContractStatus;
   paymentStatus: PaymentStatus;
 }
+
+export interface UpcomingAuction {
+  id: number;
+  contractNumber: string;
+  status: ContractStatus;
+  assetName: string;
+  assignedOfficer: string;
+  auctionDate: string;
+  endRegisterDate: string;
+}

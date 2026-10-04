@@ -53,7 +53,7 @@ export const DeleteUserModal = ({
         <Button
           type="button"
           variant="outline"
-          className="flex-1 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-50 transition-colors"
+          className="flex-1 border border-input text-foreground font-medium py-2 px-4 rounded-md hover:bg-accent transition-colors"
           onClick={() => {
             setOpen(false);
           }}

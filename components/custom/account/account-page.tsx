@@ -1,5 +1,6 @@
 "use client";
 
+import { PageHeading } from "@/components/custom/layout/page-heading";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,19 +127,18 @@ export default function AccountPage() {
     );
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Thông tin cá nhân</h1>
-          <p className="text-sm text-muted-foreground">
-            Quản lý hồ sơ cá nhân và bảo mật tài khoản.
-          </p>
-        </div>
-        <Card>
+    <div className="page-container">
+      <div className="space-y-6">
+        <PageHeading
+          title="Thông tin cá nhân"
+          description="Quản lý hồ sơ cá nhân và bảo mật tài khoản của bạn."
+          icon={<UserRound aria-hidden="true" />}
+        />
+        <Card className="bg-gradient-to-r from-primary/5 via-card to-card">
           <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
-            <Avatar className="size-20">
+            <Avatar className="size-20 ring-4 ring-card">
               <AvatarImage src={form.avatar} />
-              <AvatarFallback className="text-xl">
+              <AvatarFallback className="bg-primary/10 text-xl font-semibold text-primary">
                 {form.username.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -147,7 +147,7 @@ export default function AccountPage() {
                 {profile?.fullName || profile?.username}
               </h2>
               <p className="text-sm text-muted-foreground">{profile?.email}</p>
-              <p className="mt-1 text-xs font-medium text-blue-700">
+              <p className="mt-1 text-xs font-medium text-primary">
                 {ROLE_LABELS[String(profile?.role)] ?? profile?.role}
               </p>
             </div>
@@ -155,7 +155,7 @@ export default function AccountPage() {
         </Card>
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
               <CardTitle className="flex items-center gap-2">
                 <UserRound />
                 Thông tin hồ sơ
@@ -216,7 +216,7 @@ export default function AccountPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
               <CardTitle className="flex items-center gap-2">
                 <KeyRound />
                 Đổi mật khẩu

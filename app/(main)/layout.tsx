@@ -1,20 +1,12 @@
 "use client";
 
+import { AppHeader } from "@/components/custom/layout/app-header";
 import AppSideBar from "@/components/custom/sidebar/app-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import {
-  Building2,
-  FileCheck2,
-  Gavel,
-  LayoutDashboard,
-  Megaphone,
-  ScrollText,
-  Users,
-} from "lucide-react";
+import { FileCheck2, Gavel, ScrollText } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export default function MainLayout({
@@ -27,28 +19,6 @@ export default function MainLayout({
     pathname === href || pathname.startsWith(`${href}/`);
   const items = [
     {
-      group: "Tổng quan",
-      items: [
-        {
-          icon: <LayoutDashboard />,
-          label: "Thống kê",
-          href: "/dashboard",
-          isActive: active("/dashboard"),
-        },
-      ],
-    },
-    {
-      group: "Danh bạ",
-      items: [
-        {
-          icon: <Users />,
-          label: "Thành viên",
-          href: "/members",
-          isActive: active("/members"),
-        },
-      ],
-    },
-    {
       group: "Quản lý nghiệp vụ",
       items: [
         {
@@ -57,27 +27,27 @@ export default function MainLayout({
           href: "/contracts",
           isActive: active("/contracts"),
         },
-        {
-          icon: <Building2 />,
-          label: "Tài sản",
-          href: "/properties",
-          isActive: active("/properties"),
-        },
+        // {
+        //   icon: <Building2 />,
+        //   label: "Tài sản",
+        //   href: "/properties",
+        //   isActive: active("/properties"),
+        // },
         {
           icon: <Gavel />,
           label: "Quy chế",
           href: "/regulations",
           isActive: active("/regulations"),
         },
-        {
-          icon: <Megaphone />,
-          label: "Thông báo",
-          href: "/announcements",
-          isActive: active("/announcements"),
-        },
+        // {
+        //   icon: <Megaphone />,
+        //   label: "Thông báo",
+        //   href: "/announcements",
+        //   isActive: active("/announcements"),
+        // },
         {
           icon: <FileCheck2 />,
-          label: "Thanh lý hợp đồng",
+          label: "Kết quả đấu giá",
           href: "/auction-results",
           isActive: active("/auction-results"),
         },
@@ -87,11 +57,9 @@ export default function MainLayout({
   return (
     <SidebarProvider>
       <AppSideBar items={items} />
-      <SidebarInset>
-        <main className="min-w-0">
-          <SidebarTrigger className="m-2" />
-          {children}
-        </main>
+      <SidebarInset className="min-w-0 overflow-clip ring-1 ring-border/70">
+        <AppHeader />
+        <div className="min-w-0 flex-1">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

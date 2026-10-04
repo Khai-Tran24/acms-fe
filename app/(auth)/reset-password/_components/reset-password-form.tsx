@@ -81,9 +81,9 @@ export const ResetPasswordForm = ({
 
   return (
     <>
-      <div className="flex flex-col justify-center items-center">
-        <h1 className="text-2xl font-bold">Đặt lại mật khẩu</h1>
-        <p className="text-sm text-gray-500">Nhập mật khẩu mới của bạn.</p>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Đặt lại mật khẩu</h1>
+        <p className="text-sm text-muted-foreground">Nhập mật khẩu mới của bạn.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -97,7 +97,7 @@ export const ResetPasswordForm = ({
               disabled={isLoading}
             />
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-destructive text-sm mt-1">
                 {errors.password.message}
               </p>
             )}
@@ -112,14 +112,14 @@ export const ResetPasswordForm = ({
               disabled={isLoading}
             />
             {errors.confirmPassword && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-destructive text-sm mt-1">
                 {errors.confirmPassword.message}
               </p>
             )}
           </Field>
 
           <Button
-            className="w-full"
+            className="w-full h-11"
             variant={"default"}
             type="submit"
             disabled={isLoading}
@@ -132,7 +132,7 @@ export const ResetPasswordForm = ({
       <p className="text-sm text-muted-foreground text-center">
         Quay lại trang đăng nhập?{" "}
         <span
-          className="hover:underline cursor-pointer text-blue-600"
+          className="hover:underline cursor-pointer text-primary"
           onClick={() => !isLoading && router.push("/sign-in")}
         >
           Đăng nhập

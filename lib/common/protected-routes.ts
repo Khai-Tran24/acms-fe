@@ -28,7 +28,7 @@ export default function ProtectedRoute({
         case RoleEnum.SECRETARY:
         case RoleEnum.SPECIALIST:
         case RoleEnum.ARCHIVIST:
-          router.push("/dashboard");
+          router.push("/contracts");
           break;
         default:
           router.push("/sign-in");

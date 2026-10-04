@@ -1,12 +1,13 @@
 import { ResetPasswordForm } from "./_components/reset-password-form";
 
-const ResetPasswordPage = ({
+const ResetPasswordPage = async ({
   searchParams,
 }: {
-  searchParams: { email: string; token: string };
+  searchParams: Promise<{ email: string; token: string }>;
 }) => {
+  const { email, token } = await searchParams;
   return (
-    <ResetPasswordForm email={searchParams.email} token={searchParams.token} />
+    <ResetPasswordForm email={email} token={token} />
   );
 };
 

@@ -24,57 +24,57 @@ import { Cell, PieChart, Pie } from "recharts";
 const contractstatusColorPalette = [
   {
     status: ContractStatus.DANG_DAU_GIA,
-    color: "#3b82f6", // Tailwind blue-500
+    color: "var(--chart-3)",
   },
   {
     status: ContractStatus.MOI,
-    color: "#10b981", // Tailwind green-500
+    color: "var(--info)",
   },
   {
-    status: ContractStatus.TAM_DUNG,
-    color: "#ef4444", // Tailwind red-500
+    status: ContractStatus.DA_HUY,
+    color: "var(--chart-5)",
   },
   {
     status: ContractStatus.DA_THANH_LY,
-    color: "#8b5cf6", // Tailwind violet-500
+    color: "var(--chart-4)",
   },
   {
     status: ContractStatus.DAU_GIA_THANH,
-    color: "#14b8a6", // Tailwind teal-500
+    color: "var(--chart-1)",
   },
   {
     status: ContractStatus.DAU_GIA_KHONG_THANH,
-    color: "#e11d48", // Tailwind rose-500
+    color: "var(--chart-5)",
   },
 ];
 
 const paymentStatusColorPallette = [
   {
     status: PaymentStatus.DA_THU_TIEN,
-    color: "#10b981", // Tailwind green-500
+    color: "var(--chart-2)",
   },
   {
     status: PaymentStatus.CHUA_THU_TIEN,
-    color: "#f59e0b", // Tailwind yellow-500
+    color: "var(--chart-3)",
   },
 ];
 
 const propertyTypeColorPalette = [
   {
     status: PropertyType.BAT_DONG_SAN,
-    color: "#06b6d4", // Tailwind cyan-500
+    color: "var(--chart-1)",
   },
   {
     status: PropertyType.DONG_SAN,
-    color: "#f97316", // Tailwind orange-500
+    color: "var(--chart-3)",
   },
   {
     status: PropertyType.KHOAN_NO,
-    color: "#8b5cf6", // Tailwind violet-500
+    color: "var(--chart-4)",
   },
   {
     status: PropertyType.TAI_SAN_KHAC,
-    color: "#f43f5e", // Tailwind pink-500
+    color: "var(--chart-5)",
   },
 ];
 

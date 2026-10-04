@@ -5,6 +5,7 @@ import {
   ContractPayload,
 } from "@/lib/types/contract.type";
 import api from "../api";
+import { ContractReportQuery } from "@/lib/types/report.type";
 import { Response } from "@/lib/types/reponse.type";
 import { RoleEnum } from "@/lib/enums/role.enum";
 
@@ -90,7 +91,7 @@ const updateContractDiscountPrice = async (
   }
 };
 
-const exportContractsToExcel = async (query?: GetContractsQuery) => {
+const exportContractsToExcel = async (query?: GetContractsQuery | ContractReportQuery) => {
   try {
     const response = await api.get("/export-excel/contracts", {
       params: query,

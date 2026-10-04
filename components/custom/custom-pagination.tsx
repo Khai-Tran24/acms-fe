@@ -76,9 +76,9 @@ const CustomPagination = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <Field orientation="horizontal" className="w-fit">
-        <FieldLabel htmlFor={rowsPerPageId}>Rows per page</FieldLabel>
+        <FieldLabel htmlFor={rowsPerPageId}>Số dòng</FieldLabel>
         <Select
           value={String(pageSize)}
           onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -98,9 +98,9 @@ const CustomPagination = ({
         </Select>
       </Field>
       <div className="text-sm text-muted-foreground">
-        {startItem}-{endItem} of {totalItems}
+        {startItem}–{endItem} / {totalItems} kết quả
       </div>
-      <Pagination className="sm:w-fit sm:mx-0">
+      <Pagination className="w-fit mx-0">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
@@ -113,11 +113,11 @@ const CustomPagination = ({
           {pages.map((page, index) => (
             <React.Fragment key={page}>
               {index > 0 && page - pages[index - 1] > 1 ? (
-                <PaginationItem>
+                <PaginationItem className="hidden sm:block">
                   <PaginationEllipsis />
                 </PaginationItem>
               ) : null}
-              <PaginationItem>
+              <PaginationItem className={page === currentPage ? "" : "hidden sm:block"}>
                 <PaginationLink
                   href="#"
                   isActive={page === currentPage}

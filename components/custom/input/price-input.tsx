@@ -33,7 +33,7 @@ export const PriceInput = ({
 }: PriceInputProps) => {
   return (
     <Field className={className}>
-      <FieldLabel className="text-sm font-medium text-gray-700">
+      <FieldLabel className="text-sm font-medium text-foreground">
         {label}
       </FieldLabel>
       <Controller

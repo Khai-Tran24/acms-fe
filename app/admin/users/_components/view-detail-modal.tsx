@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/lib/helper/date-formatter.helper";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUserDetails } from "@/lib/api/user/user.api";
@@ -27,16 +28,6 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
     fetchUserDetails();
   }, [user.id]);
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return (
     <div className="space-y-6 py-4">
       {isLoading ? (
@@ -49,16 +40,16 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
         <>
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
-              <p className="text-base font-semibold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Email</p>
+              <p className="text-base font-semibold text-foreground">
                 {userDetails.email}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">
+              <p className="text-sm font-medium text-muted-foreground mb-1">
                 Tên người dùng
               </p>
-              <p className="text-base font-semibold text-gray-900">
+              <p className="text-base font-semibold text-foreground">
                 {userDetails.username}
               </p>
             </div>
@@ -66,8 +57,8 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-2">Vai trò</p>
-              <Badge className="bg-gray-300 text-black">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Vai trò</p>
+              <Badge className="bg-secondary text-secondary-foreground">
                 {userDetails.role === RoleEnum.AUCTIONEER
                   ? "Đấu giá viên"
                   : userDetails.role === RoleEnum.SECRETARY
@@ -78,7 +69,7 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-2">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
                 Trạng thái
               </p>
               <Badge
@@ -95,25 +86,25 @@ export const ViewDetailModal = ({ user }: { user: UserData }) => {
 
           <div className="border-t border-gray-200 pt-4 space-y-3">
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 Ngày tạo
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {formatDate(userDetails.createdAt)}
               </p>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 Cập nhật gần nhất
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {formatDate(userDetails.updatedAt)}
               </p>
             </div>
           </div>
         </>
       ) : (
-        <p className="text-center text-gray-500">
+        <p className="text-center text-muted-foreground">
           Không thể tải thông tin người dùng
         </p>
       )}

@@ -81,8 +81,8 @@ export function FileSection({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Tệp đính kèm</CardTitle>
+      <CardHeader className="border-b">
+        <CardTitle className="flex items-center gap-2"><FileText className="size-4 text-primary" /> Tệp đính kèm</CardTitle>
         <CardAction>
           <input
             ref={inputRef}
@@ -93,6 +93,7 @@ export function FileSection({
           />
           <Button
             type="button"
+            variant="outline"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
           >
@@ -107,7 +108,7 @@ export function FileSection({
       </CardHeader>
       <CardContent>
         {files.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center text-sm text-muted-foreground">
             Chưa có tệp đính kèm.
           </div>
         ) : (
@@ -117,7 +118,7 @@ export function FileSection({
                 key={file.id}
                 className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center"
               >
-                <FileText className="size-5 shrink-0 text-muted-foreground" />
+                <FileText className="size-5 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{file.originalName}</p>
                   <p className="text-xs text-muted-foreground">

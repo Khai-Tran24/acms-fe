@@ -1,4 +1,5 @@
 import { Pagination } from "./reponse.type";
+import { ContractStatus } from "../enums/contract.enum";
 
 export type ResourceName =
   | "contract"
@@ -22,5 +23,6 @@ export interface ResourceQuery {
   page?: number;
   limit?: number;
   search?: string;
+  contractStatus?: ContractStatus;
   sortOrder?: "ASC" | "DESC";
 }

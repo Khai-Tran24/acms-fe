@@ -74,7 +74,6 @@ export interface GetContractsQuery {
   endRegisterDate?: string;
   auctionDate?: string;
   contractNumber?: string;
-  contractName?: string;
   contractType?: string;
   contractOwnerType?: string;
   contractDateFrom?: string;

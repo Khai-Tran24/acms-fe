@@ -11,26 +11,25 @@ export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   [ContractStatus.DANG_DAU_GIA]: "Đang đấu giá",
   [ContractStatus.DAU_GIA_KHONG_THANH]: "Đấu giá không thành",
   [ContractStatus.DAU_GIA_THANH]: "Đấu giá thành",
-  [ContractStatus.TAM_DUNG]: "Tạm dừng",
   [ContractStatus.DA_THANH_LY]: "Đã thanh lý",
+  [ContractStatus.DA_HUY]: "Đã hủy",
 };
 
 export const getStatusClassName = (status: ContractStatus) => {
   switch (status) {
     case ContractStatus.MOI:
-      return "bg-emerald-100 text-emerald-800";
+      return "bg-info-soft text-info";
     case ContractStatus.DANG_DAU_GIA:
-      return "bg-blue-100 text-blue-800";
+      return "bg-warning-soft text-warning";
     case ContractStatus.DAU_GIA_KHONG_THANH:
-      return "bg-amber-100 text-amber-800";
+    case ContractStatus.DA_HUY:
+      return "bg-destructive/10 text-destructive";
     case ContractStatus.DA_THANH_LY:
-      return "bg-violet-100 text-violet-800";
+      return "bg-lavender-soft text-lavender";
     case ContractStatus.DAU_GIA_THANH:
-      return "bg-emerald-100 text-emerald-800";
-    case ContractStatus.TAM_DUNG:
-      return "bg-red-100 text-red-800";
+      return "bg-success-soft text-success";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-muted text-muted-foreground";
   }
 };
 
@@ -44,15 +43,15 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
 export const getPropertyTypeClassName = (propertyType: PropertyType) => {
   switch (propertyType) {
     case PropertyType.DONG_SAN:
-      return "bg-blue-100 text-blue-800";
+      return "bg-info-soft text-info";
     case PropertyType.BAT_DONG_SAN:
-      return "bg-green-100 text-green-800";
+      return "bg-success-soft text-success";
     case PropertyType.KHOAN_NO:
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-warning-soft text-warning";
     case PropertyType.TAI_SAN_KHAC:
-      return "bg-purple-100 text-purple-800";
+      return "bg-lavender-soft text-lavender";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-muted text-muted-foreground";
   }
 };
 
@@ -64,11 +63,11 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
 export const getPaymentStatusClassName = (paymentStatus: PaymentStatus) => {
   switch (paymentStatus) {
     case PaymentStatus.CHUA_THU_TIEN:
-      return "bg-amber-100 text-amber-800";
+      return "bg-warning-soft text-warning";
     case PaymentStatus.DA_THU_TIEN:
-      return "bg-emerald-100 text-emerald-800";
+      return "bg-success-soft text-success";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-muted text-muted-foreground";
   }
 };
 
