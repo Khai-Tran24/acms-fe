@@ -246,7 +246,7 @@ export default function ContractReportPage() {
                             className="font-semibold text-primary hover:underline"
                             href={`/admin/contracts/${item.id}`}
                           >
-                            {item.contractNumber}
+                            {item.contractNumber || `Hợp đồng #${item.id}`}
                           </Link>
                         </TableCell>
                         <TableCell>

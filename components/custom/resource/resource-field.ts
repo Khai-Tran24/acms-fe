@@ -22,5 +22,5 @@ export interface ResourceField {
   sendEmptyAsNull?: boolean;
   jsonShape?: "object" | "cost-array";
   fixedJsonKeys?: string[];
+  jsonKeyLabels?: Record<string, string>;
 }
-

@@ -34,3 +34,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Auction form checks
+
+With Node.js 24, run `npm run test:auction-form` to check percentage deposits, contract autofill, and date/price validation. The form uses the latest announcement, then the latest regulation, then the contract as the source of auction details. Registration autofills the fee and deposit; auction results default the winning price to the starting price. Existing values are retained when opening an edit form.

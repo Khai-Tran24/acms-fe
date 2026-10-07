@@ -23,6 +23,7 @@ const ROLE_LABELS: Record<string, string> = {
   THU_KY: "Thư ký",
   CHUYEN_VIEN: "Chuyên viên",
   NHAN_VIEN_LUU_TRU: "Nhân viên lưu trữ",
+  NHAN_VIEN_BAN_HO_SO: "Nhân viên bán hồ sơ",
 };
 
 const messageOf = (error: unknown) => {

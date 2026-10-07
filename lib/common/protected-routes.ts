@@ -21,6 +21,9 @@ export default function ProtectedRoute({
   const naviagateByRole = useCallback(
     (role: RoleEnum) => {
       switch (role) {
+        case RoleEnum.REGISTRATION_STAFF:
+          router.push("/auction-registrations");
+          break;
         case RoleEnum.ADMIN:
           router.push("/admin/dashboard");
           break;

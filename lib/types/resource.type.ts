@@ -7,7 +7,8 @@ export type ResourceName =
   | "user"
   | "regulation"
   | "announcement"
-  | "auction-result";
+  | "auction-result"
+  | "auction-registration";
 
 export interface ResourceItem {
   id: number;
@@ -24,5 +25,7 @@ export interface ResourceQuery {
   limit?: number;
   search?: string;
   contractStatus?: ContractStatus;
+  selectableOnly?: boolean;
+  contractType?: string;
   sortOrder?: "ASC" | "DESC";
 }

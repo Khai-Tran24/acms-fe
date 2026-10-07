@@ -63,6 +63,7 @@ const ROLE_LABELS: Record<RoleEnum, string> = {
   [RoleEnum.SECRETARY]: "Thư ký",
   [RoleEnum.SPECIALIST]: "Chuyên viên",
   [RoleEnum.ARCHIVIST]: "Nhân viên lưu trữ",
+  [RoleEnum.REGISTRATION_STAFF]: "Nhân viên bán hồ sơ",
   [RoleEnum.ADMIN]: "Quản trị viên",
 };
 

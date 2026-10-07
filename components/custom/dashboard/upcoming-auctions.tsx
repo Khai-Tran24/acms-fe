@@ -129,7 +129,7 @@ export function UpcomingAuctions() {
                         href={`${basePath}/contracts/${item.id}`}
                         className="font-semibold text-primary hover:underline"
                       >
-                        {item.contractNumber}
+                        {item.contractNumber || `Hợp đồng #${item.id}`}
                       </Link>
                     </TableCell>
                     <TableCell className="min-w-48 max-w-80 whitespace-normal">

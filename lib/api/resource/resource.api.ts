@@ -15,22 +15,26 @@ const normalizeList = (list: {
   pagination: {
     page: list.pagination?.page ?? 1,
     limit: list.pagination?.limit ?? 10,
-    totalItems:
-      list.pagination?.totalItems ?? list.pagination?.total ?? 0,
+    totalItems: list.pagination?.totalItems ?? list.pagination?.total ?? 0,
     totalPages: list.pagination?.totalPages ?? 1,
   },
 });
 
 export async function getResources(
-  resource: ResourceName,
+  resource: ResourceName | "auction-registration/contracts",
   query: ResourceQuery,
 ) {
   const response = await api.get(`/` + resource, { params: query });
-  const envelope = response.data as Response<Parameters<typeof normalizeList>[0]>;
+  const envelope = response.data as Response<
+    Parameters<typeof normalizeList>[0]
+  >;
   return normalizeList(envelope.data);
 }
 
-export async function getResource(resource: ResourceName, id: number) {
+export async function getResource(
+  resource: ResourceName | "auction-registration/contracts",
+  id: number,
+) {
   const response = await api.get(`/${resource}/${id}`);
   return (response.data as Response<ResourceItem>).data;
 }

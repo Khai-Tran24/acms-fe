@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { contractLabel } from "@/lib/helper/contract-label.helper";
 import { PageHeading } from "@/components/custom/layout/page-heading";
 import { ContractStatusBadge } from "@/components/custom/contract/contract-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -29,10 +31,26 @@ import {
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useToast } from "@/lib/hooks/use-toast";
 import { formatCurrency } from "@/lib/helper/currency-exchange.helper";
-import { auctionFinalPrice } from "@/lib/helper/auction-finance.helper";
+import {
+  auctionFinalPrice,
+  auctionPriceGap,
+} from "@/lib/helper/auction-finance.helper";
 import { DEFAULT_PAGINATION, Pagination } from "@/lib/types/reponse.type";
 import { ResourceItem, ResourceName } from "@/lib/types/resource.type";
-import { Edit, Eye, Plus, Search, Trash2, ScrollText, Package, Users, Gavel, Megaphone, FileCheck2, SearchX } from "lucide-react";
+import {
+  Edit,
+  Eye,
+  Plus,
+  Search,
+  Trash2,
+  ScrollText,
+  Package,
+  Users,
+  Gavel,
+  Megaphone,
+  FileCheck2,
+  SearchX,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatDate } from "@/lib/helper/date-formatter.helper";
@@ -52,7 +70,8 @@ export interface ResourceManagerProps {
 
 const displayValue = (value: unknown, field: ResourceField) => {
   if (value === null || value === undefined || value === "") return "—";
-  if (field.key === "contractStatus") return <ContractStatusBadge value={value} />;
+  if (field.key === "contractStatus")
+    return <ContractStatusBadge value={value} />;
   const option = field.options?.find((item) => item.value === String(value));
   if (option) return option.label;
   if (field.kind === "json") {
@@ -71,6 +90,7 @@ const displayValue = (value: unknown, field: ResourceField) => {
       "registrationFee",
       "winningPrice",
       "finalPrice",
+      "priceGap",
     ].includes(field.key)
   ) {
     return formatCurrency(Number(value));
@@ -141,12 +161,14 @@ export function ResourceManager({
       setEditing(await getResource(resource, item.id));
       setFormOpen(true);
     } catch (error) {
-      toastRef.current.error(errorMessage(error) ?? `Không thể tải ${singular}.`);
+      toastRef.current.error(
+        errorMessage(error) ?? `Không thể tải ${singular}.`,
+      );
     }
   };
 
   const openView = async (item: ResourceItem) => {
-    if (resource !== "user") {
+    if (resource !== "user" && resource !== "auction-registration") {
       router.push(`${pathname}/${item.id}`);
       return;
     }
@@ -173,9 +195,11 @@ export function ResourceManager({
     }
   };
 
-  const tableFields = fields
-    .filter((field) => field.table !== false)
-    .slice(0, 6);
+  const visibleFields = fields.filter((field) => field.table !== false);
+  const tableFields =
+    resource === "auction-registration" || resource === "auction-result"
+      ? visibleFields
+      : visibleFields.slice(0, 6);
   const ResourceIcon = {
     contract: ScrollText,
     property: Package,
@@ -183,21 +207,26 @@ export function ResourceManager({
     regulation: Gavel,
     announcement: Megaphone,
     "auction-result": FileCheck2,
+    "auction-registration": Users,
   }[resource];
 
   return (
     <div className="page-container">
       <PageHeading
         title={title}
-        description={readOnly
-          ? "Tra cứu và kết nối với các thành viên trong hệ thống."
-          : `Theo dõi, tra cứu và cập nhật ${singular} tại một nơi.`}
+        description={
+          readOnly
+            ? "Tra cứu và kết nối với các thành viên trong hệ thống."
+            : `Theo dõi, tra cứu và cập nhật ${singular} tại một nơi.`
+        }
         icon={<ResourceIcon aria-hidden="true" />}
-        actions={!readOnly && (
-          <Button onClick={openCreate}>
-            <Plus className="size-4" /> Thêm {singular}
-          </Button>
-        )}
+        actions={
+          !readOnly && (
+            <Button onClick={openCreate}>
+              <Plus className="size-4" /> Thêm {singular}
+            </Button>
+          )
+        }
       />
 
       <section className="surface-panel p-4 md:p-5">
@@ -249,9 +278,17 @@ export function ResourceManager({
                     className="h-28 text-center text-muted-foreground"
                   >
                     <div className="flex flex-col items-center gap-2 py-6">
-                      <span className="rounded-2xl bg-muted p-3"><SearchX className="size-6 text-muted-foreground" /></span>
-                      <p className="font-medium text-foreground">{search ? "Không tìm thấy kết quả" : "Chưa có dữ liệu"}</p>
-                      <p className="text-xs">{search ? "Thử tìm kiếm bằng từ khóa khác." : `Thêm ${singular} để bắt đầu quản lý.`}</p>
+                      <span className="rounded-2xl bg-muted p-3">
+                        <SearchX className="size-6 text-muted-foreground" />
+                      </span>
+                      <p className="font-medium text-foreground">
+                        {search ? "Không tìm thấy kết quả" : "Chưa có dữ liệu"}
+                      </p>
+                      <p className="text-xs">
+                        {search
+                          ? "Thử tìm kiếm bằng từ khóa khác."
+                          : `Thêm ${singular} để bắt đầu quản lý.`}
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -263,17 +300,44 @@ export function ResourceManager({
                     </TableCell>
                     {tableFields.map((field) => (
                       <TableCell key={field.key} className="max-w-64 truncate">
-                        {displayValue(
-                          field.key === "contractId"
-                            ? (item.contract as { contractNumber?: string })
-                                ?.contractNumber
-                            : field.key === "finalPrice"
-                              ? auctionFinalPrice(
-                                  item.winningPrice,
-                                  item.auctionCost,
-                                )
-                              : item[field.key],
-                          field,
+                        {field.key === "parentContractId" ? (
+                          item.parentContractId ? (
+                            <Link
+                              className="text-primary underline"
+                              href={`${pathname.startsWith("/admin") ? "/admin" : ""}/contracts/${item.parentContractId}`}
+                            >
+                              {String(
+                                (
+                                  item.parentContract as
+                                    ResourceItem | undefined
+                                )?.contractNumber || "Chưa có số hợp đồng",
+                              )}
+                            </Link>
+                          ) : (
+                            "—"
+                          )
+                        ) : (
+                          displayValue(
+                            field.key === "contractId"
+                              ? item.contract
+                                ? contractLabel(item.contract as ResourceItem)
+                                : "—"
+                              : field.key === "priceGap"
+                                ? auctionPriceGap(
+                                    item.startingPrice,
+                                    item.winningPrice,
+                                  )
+                                : field.key === "finalPrice"
+                                  ? auctionFinalPrice(
+                                      item.winningPrice,
+                                      item.auctionCost,
+                                    )
+                                  : resource === "contract" &&
+                                      field.key === "contractNumber"
+                                    ? contractLabel(item)
+                                    : item[field.key],
+                            field,
+                          )
                         )}
                       </TableCell>
                     ))}
@@ -366,6 +430,8 @@ export function ResourceManager({
                     {displayValue(
                       field.key === "contractId"
                         ? viewing.contract
+                          ? contractLabel(viewing.contract as ResourceItem)
+                          : "—"
                         : viewing[field.key],
                       field,
                     )}

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:resource-form": "node --test --test-isolation=none tests/resource-form.test.mjs",
+    "test:auction-form": "node --test --test-isolation=none tests/auction-form.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -70,7 +70,7 @@ export interface ChartData {
 }
 export interface recentContractsData {
   id: string;
-  contractNumber: string;
+  contractNumber: string | null;
   propertyName: string;
   propertyType: PropertyType;
   status: ContractStatus;
@@ -79,7 +79,7 @@ export interface recentContractsData {
 
 export interface UpcomingAuction {
   id: number;
-  contractNumber: string;
+  contractNumber: string | null;
   status: ContractStatus;
   assetName: string;
   assignedOfficer: string;

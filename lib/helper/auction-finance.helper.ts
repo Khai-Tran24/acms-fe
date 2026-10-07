@@ -15,3 +15,22 @@ export const auctionFinalPrice = (
   const price = Number(winningPrice ?? 0);
   return (Number.isFinite(price) ? price : 0) - auctionCostTotal(auctionCost);
 };
+
+/** Return no comparison until both amounts are available (zero is valid). */
+export const auctionPriceGap = (
+  startingPrice: unknown,
+  winningPrice: unknown,
+) => {
+  if (
+    startingPrice == null ||
+    startingPrice === "" ||
+    winningPrice == null ||
+    winningPrice === ""
+  )
+    return null;
+  const start = Number(startingPrice);
+  const winning = Number(winningPrice);
+  return Number.isFinite(start) && Number.isFinite(winning)
+    ? winning - start
+    : null;
+};

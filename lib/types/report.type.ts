@@ -41,7 +41,7 @@ export interface ContractReport {
   statusBreakdown: { status: ContractStatus; count: number }[];
   items: {
     id: number;
-    contractNumber: string;
+    contractNumber: string | null;
     contractDate: string | null;
     contractStatus: ContractStatus;
     propertyNames: string[];

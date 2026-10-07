@@ -4,11 +4,20 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { getResource, getResources } from "@/lib/api/resource/resource.api";
 import { ResourceItem } from "@/lib/types/resource.type";
 import { cn } from "@/lib/utils";
-import { ContractStatus } from "@/lib/enums/contract.enum";
+import {
+  contractSelectionQuery,
+  type ContractSelection,
+} from "@/lib/helper/contract-selection.helper";
+
+import { contractLabel } from "@/lib/helper/contract-label.helper";
 
 interface ResourceSearchSelectProps {
   id: string;
@@ -17,16 +26,19 @@ interface ResourceSearchSelectProps {
   onValueChange: (value: string) => void;
   required?: boolean;
   disabled?: boolean;
-  contractStatus?: ContractStatus;
+  contractSelection?: ContractSelection;
+  excludedId?: number;
+  registrationContracts?: boolean;
 }
 
 function optionLabel(
   resource: ResourceSearchSelectProps["resource"],
   item: ResourceItem,
 ) {
-  if (resource === "property") return String(item.propertyName || `#${item.id}`);
+  if (resource === "property")
+    return String(item.propertyName || `#${item.id}`);
   return resource === "contract"
-    ? String(item.contractNumber || `#${item.id}`)
+    ? contractLabel(item)
     : String(item.fullName || item.username || `#${item.id}`);
 }
 
@@ -36,7 +48,9 @@ function optionDescription(
 ) {
   if (resource === "property") return String(item.propertyLocation || "");
   return resource === "contract"
-    ? String(item.contractName || "")
+    ? item.parentContractId
+      ? "Hợp đồng sửa đổi bổ sung"
+      : "Hợp đồng mới"
     : [item.username, item.email].filter(Boolean).join(" · ");
 }
 
@@ -47,8 +61,13 @@ export function ResourceSearchSelect({
   onValueChange,
   required,
   disabled,
-  contractStatus,
+  contractSelection,
+  excludedId,
+  registrationContracts = false,
 }: ResourceSearchSelectProps) {
+  const apiResource = registrationContracts
+    ? "auction-registration/contracts"
+    : resource;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -63,17 +82,23 @@ export function ResourceSearchSelect({
   const listRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const placeholder =
-    resource === "contract" ? "Chọn hợp đồng" : resource === "property" ? "Chọn tài sản" : "Chọn người dùng";
+    resource === "contract"
+      ? "Chọn hợp đồng"
+      : resource === "property"
+        ? "Chọn tài sản"
+        : "Chọn người dùng";
   const searchPlaceholder =
     resource === "contract"
-      ? "Tìm theo số hợp đồng..."
-      : resource === "property" ? "Tìm tài sản..." : "Tìm theo tên, tài khoản hoặc email...";
+      ? "Tìm theo số hợp đồng hoặc tài sản..."
+      : resource === "property"
+        ? "Tìm tài sản..."
+        : "Tìm theo tên, tài khoản hoặc email...";
 
   // Resolve existing/default values even when they are outside the first page.
   useEffect(() => {
     if (!value || String(selected?.id) === value) return;
     let cancelled = false;
-    getResource(resource, Number(value))
+    getResource(apiResource, Number(value))
       .then((item) => {
         if (!cancelled) setSelected(item);
       })
@@ -83,42 +108,59 @@ export function ResourceSearchSelect({
     return () => {
       cancelled = true;
     };
-  }, [resource, value, selected?.id]);
+  }, [apiResource, value, selected?.id]);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      try {
-        const result = await getResources(resource, {
-          page,
-          limit: 20,
-          search: search.trim() || undefined,
-          ...(resource === "contract" && contractStatus ? { contractStatus } : {}),
-        });
-        if (cancelled) return;
-        setItems((current) =>
-          page === 1
-            ? result.items
-            : [
-                ...current,
-                ...result.items.filter(
-                  (item) => !current.some((existing) => existing.id === item.id),
-                ),
-              ],
-        );
-        setHasMore(page < result.pagination.totalPages);
-      } catch {
-        if (!cancelled) setError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }, search ? 300 : 0);
+    const timer = window.setTimeout(
+      async () => {
+        try {
+          const result = await getResources(apiResource, {
+            page,
+            limit: 20,
+            search: search.trim() || undefined,
+            ...(resource === "contract" && !registrationContracts
+              ? contractSelectionQuery(contractSelection)
+              : {}),
+          });
+          if (cancelled) return;
+          setItems((current) =>
+            page === 1
+              ? result.items.filter((item) => item.id !== excludedId)
+              : [
+                  ...current,
+                  ...result.items.filter(
+                    (item) =>
+                      item.id !== excludedId &&
+                      !current.some((existing) => existing.id === item.id),
+                  ),
+                ],
+          );
+          setHasMore(page < result.pagination.totalPages);
+        } catch {
+          if (!cancelled) setError(true);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      },
+      search ? 300 : 0,
+    );
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [open, resource, search, page, retry, contractStatus]);
+  }, [
+    open,
+    resource,
+    apiResource,
+    search,
+    page,
+    retry,
+    contractSelection,
+    excludedId,
+    registrationContracts,
+  ]);
 
   useEffect(() => {
     if (activeIndex >= 0) {
@@ -280,7 +322,10 @@ export function ResourceSearchSelect({
             </div>
           )}
           {!loading && !error && items.length === 0 && (
-            <p role="status" className="p-4 text-center text-sm text-muted-foreground">
+            <p
+              role="status"
+              className="p-4 text-center text-sm text-muted-foreground"
+            >
               Không tìm thấy kết quả.
             </p>
           )}

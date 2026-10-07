@@ -2,18 +2,18 @@
 
 import { AppHeader } from "@/components/custom/layout/app-header";
 import AppSideBar from "@/components/custom/sidebar/app-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
   FileCheck2,
   Gavel,
+  IdCard,
   LayoutDashboard,
   ScrollText,
   SquareChartGantt,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/lib/context/auth-context";
+import { RoleEnum } from "@/lib/enums/role.enum";
 import { usePathname } from "next/navigation";
 
 export default function AdminLayout({
@@ -22,6 +22,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
   const items = [
@@ -80,6 +81,17 @@ export default function AdminLayout({
         //   href: "/admin/announcements",
         //   isActive: active("/admin/announcements"),
         // },
+        ...(user?.role === RoleEnum.ADMIN ||
+        user?.role === RoleEnum.REGISTRATION_STAFF
+          ? [
+              {
+                icon: <IdCard />,
+                label: "Đăng ký đấu giá",
+                href: "/admin/auction-registrations",
+                isActive: active("/admin/auction-registrations"),
+              },
+            ]
+          : []),
         {
           icon: <FileCheck2 />,
           label: "Kết quả đấu giá",
